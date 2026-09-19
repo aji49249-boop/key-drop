@@ -404,14 +404,46 @@
   .global-error.show{ display:block; }
 
   @media print{
+    @page{ size:auto; margin:8mm; }
     body{ background:#fff; }
     header.top, .submit-row, details.history, #formView, #listView{ display:none !important; }
     #authView, #bootScreen{ display:none !important; }
     .page{ padding:0; max-width:100%; }
     #ticketView{ display:block !important; }
-    .ticket-card{ box-shadow:none; border:1px solid #999; max-width:340px; margin:0 auto; }
-    .ticket-actions{ display:none !important; }
+    .ticket-actions, #waShareStatus{ display:none !important; }
     .ktp-download-btn{ display:none !important; }
+
+    /* Dirapatkan supaya satu tiket muat di satu lembar kertas HVS (A4/F4)
+       walau ada foto tanda tangan, foto KTP, dan teks Syarat & Ketentuan
+       lengkap. Kalau isinya kebetulan tetap lebih panjang dari satu halaman
+       (misalnya daftar barang berharga sangat panjang), skrip di bawah akan
+       mengecilkan (scale) seluruh tiket secukupnya supaya tetap satu lembar. */
+    #ticketView .ticket-card{
+      box-shadow:none; border:1px solid #999; width:100%; max-width:680px; margin:0 auto;
+      padding:14px 18px 16px; transform-origin:top center;
+    }
+    .ticket-card .receipt-head{ margin-bottom:3px; }
+    .ticket-card .receipt-head .co{ font-size:9.5px; }
+    .ticket-card .receipt-head h2{ font-size:15px; margin-top:1px; }
+    .ticket-card .stub{ margin:4px 0 1px !important; }
+    .ticket-card .stub .eyebrow{ font-size:9px; }
+    .ticket-card .stub-number{ font-size:32px !important; margin:3px 0 1px !important; }
+    .ticket-card .stub .stub-date{ font-size:10px; }
+    .ticket-card .stub-divider{ margin:8px -18px !important; }
+    .ticket-card .receipt-row{ padding:4px 0; font-size:10.5px; }
+    .ticket-card .receipt-list{ font-size:10px; margin-top:2px; padding-left:16px; }
+    .ticket-card .receipt-list li{ margin-bottom:1px; }
+    .ticket-card .ticket-terms{ margin-top:8px; padding-top:8px; font-size:7.8px; line-height:1.3; }
+    .ticket-card .ticket-terms .tt-title{ font-size:8.5px; margin-bottom:4px; }
+    .ticket-card .terms-list, .ticket-card .terms-sublist{ padding-left:14px; }
+    .ticket-card .terms-list > li{ margin-bottom:2px; }
+    .ticket-card .receipt-media{ margin-top:8px; gap:8px; }
+    .ticket-card .receipt-media img{ max-height:130px; object-fit:contain; }
+    .ticket-card .receipt-media figcaption{ font-size:7.8px; margin-top:2px; }
+    .ticket-card .sig-name{ font-size:8.5px; margin-top:3px; padding-top:3px; }
+    .ticket-card .ticket-consent{ margin-top:8px; padding-top:8px; font-size:8.5px; line-height:1.3; }
+    .ticket-card .ticket-consent p{ margin:0 0 3px; }
+    .ticket-card .ticket-consent .consent-sub{ font-size:8px; }
   }
 </style>
 
@@ -1450,8 +1482,8 @@
   // diklik/diketuk manual (bukan cuma redirect otomatis) sebagai jaring pengaman.
   function navigateReservedWindow(reservedWindow, url, nama){
     if(!reservedWindow){ window.open(url, '_blank'); return; }
-    var safeUrl = String(url).replace(/"/g, '&quot;');
-    var safeNama = String(nama || 'customer').replace(/</g, '&lt;');
+    var safeUrl = String(url).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    var safeNama = String(nama || 'customer').replace(/&/g, '&amp;').replace(/</g, '&lt;');
     try {
       reservedWindow.document.open();
       reservedWindow.document.write(
@@ -1578,7 +1610,7 @@
     // membuat lembar share bawaan HP langsung tertutup sendiri sebelum sempat
     // dipakai — makanya di sini dicek dulu, dan hanya dibuka kalau memang perlu.
     var reservedWindow = canUseFileShare() ? null : window.open('', '_blank');
-    var hpForCopy = normalizePhone(currentTicketRecord.hp);
+    var hpForCopy = localPhone(currentTicketRecord.hp);
     // Disalin di awal, masih dalam gesture klik staf. Tapi berhasil-tidaknya
     // penyalinan otomatis ini tidak selalu bisa dideteksi dengan pasti (di
     // sebagian browser/HP promise-nya tetap "berhasil" walau sebenarnya
@@ -1717,7 +1749,48 @@
     showSection('ticket');
   }
 
-  document.getElementById('printBtn').addEventListener('click', function(){ window.print(); });
+  // Jaga-jaga tambahan supaya tiket tetap muat di satu lembar kertas HVS
+  // walau isinya kebetulan lebih panjang dari perkiraan (mis. daftar barang
+  // berharga sangat banyak, atau nama/model kendaraan sangat panjang):
+  // begitu browser mulai proses cetak, ukur tinggi tiket yang sebenarnya,
+  // lalu kecilkan (scale) seperlunya saja supaya pas satu halaman. Kalau
+  // memang sudah muat, tidak ada pengecilan sama sekali.
+  (function(){
+    var PRINT_SAFE_HEIGHT_PX = 1000; // area cetak aman untuk kertas HVS A4 potret setelah margin
+    function fitTicketToPage(){
+      var card = document.querySelector('#ticketView .ticket-card');
+      if(!card) return;
+      card.style.transform = '';
+      if(card.parentElement){ card.parentElement.style.height = ''; card.parentElement.style.overflow = ''; }
+      var naturalHeight = card.offsetHeight;
+      if(naturalHeight > PRINT_SAFE_HEIGHT_PX){
+        var scale = PRINT_SAFE_HEIGHT_PX / naturalHeight;
+        card.style.transform = 'scale(' + scale.toFixed(3) + ')';
+        if(card.parentElement){
+          card.parentElement.style.height = Math.ceil(naturalHeight * scale) + 'px';
+          card.parentElement.style.overflow = 'hidden';
+        }
+      }
+    }
+    function resetTicketFit(){
+      var card = document.querySelector('#ticketView .ticket-card');
+      if(!card) return;
+      card.style.transform = '';
+      if(card.parentElement){ card.parentElement.style.height = ''; card.parentElement.style.overflow = ''; }
+    }
+    // Catatan: penyesuaian ukuran HARUS lewat event 'beforeprint', bukan
+    // dipanggil langsung di sini — di titik ini tampilan masih memakai gaya
+    // layar biasa (lebih lebar & lebih besar dari versi cetak), jadi kalau
+    // fitTicketToPage() dipanggil di sini, hasil ukurnya salah (memakai
+    // ukuran layar, bukan ukuran cetak) dan malah membuat tiket di layar
+    // sempat mengecil sesaat sebelum dialog cetak muncul. window.print()
+    // sendiri yang akan memicu 'beforeprint' tepat saat gaya cetak sudah aktif.
+    window.addEventListener('beforeprint', fitTicketToPage);
+    window.addEventListener('afterprint', resetTicketFit);
+    document.getElementById('printBtn').addEventListener('click', function(){
+      window.print();
+    });
+  })();
   ticketBackBtn.addEventListener('click', function(){
     if(ticketMode === 'list'){
       renderList(listSearch.value);
