@@ -1,0 +1,1805 @@
+<title>Key Drop Ticket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<!--
+  =====================================================================
+  KEY DROP SERVICE — versi tersambung Google Sheets
+  =====================================================================
+  Isi WEBAPP_URL di bawah ini dengan URL Web App dari Apps Script yang
+  di-deploy di atas Google Sheet Anda. Lihat panduan setup yang
+  menyertai file ini untuk langkah lengkap (Sheet, Apps Script, deploy).
+-->
+<script>
+  // >>> GANTI dengan URL Web App Apps Script Anda sendiri <<<
+  var CONFIG = {
+    WEBAPP_URL: "https://script.google.com/macros/s/AKfycbzI-lXrsBjEVW8tLIhc7wpnszu3TwZLKZO1HfhAljtkolPksGmnt9m3zVxplDhwgBDqXw/exec",
+    NAMA_TOKO: "Perintis Perkasa"
+  };
+</script>
+
+<style>
+  :root{
+    --ink:#1B2430;
+    --ink-soft:#4E5B63;
+    --paper:#EAEFEA;
+    --surface:#FFFFFF;
+    --surface-2:#F4F6F4;
+    --line:#D2DAD3;
+    --accent:#B8622E;
+    --accent-ink:#FFF9F4;
+    --accent-soft:#F1E1CE;
+    --good:#2F7A4F;
+    --good-soft:#E1EEE4;
+    --bad:#B3352B;
+    --bad-soft:#F7E4E1;
+    --focus:#2E6E8E;
+    --shadow: 0 1px 2px rgba(27,36,48,0.06), 0 8px 24px -12px rgba(27,36,48,0.18);
+    --radius: 14px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#E8ECE7;
+      --ink-soft:#A6B2AB;
+      --paper:#12181A;
+      --surface:#1B2224;
+      --surface-2:#212A2C;
+      --line:#2E3A3B;
+      --accent:#E08A4B;
+      --accent-ink:#181008;
+      --accent-soft:#3A2A1A;
+      --good:#5FBE84;
+      --good-soft:#1B3226;
+      --bad:#E38078;
+      --bad-soft:#3A2220;
+      --focus:#7EC1E8;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 28px -14px rgba(0,0,0,0.6);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#E8ECE7;
+    --ink-soft:#A6B2AB;
+    --paper:#12181A;
+    --surface:#1B2224;
+    --surface-2:#212A2C;
+    --line:#2E3A3B;
+    --accent:#E08A4B;
+    --accent-ink:#181008;
+    --accent-soft:#3A2A1A;
+    --good:#5FBE84;
+    --good-soft:#1B3226;
+    --bad:#E38078;
+    --bad-soft:#3A2220;
+    --focus:#7EC1E8;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 28px -14px rgba(0,0,0,0.6);
+    color-scheme: dark;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size:15px;
+    line-height:1.5;
+  }
+  h1,h2,h3{ font-family:"Oswald", "Arial Narrow", sans-serif; text-wrap:balance; margin:0; }
+  .mono{ font-family:"IBM Plex Mono", ui-monospace, SFMono-Regular, monospace; font-variant-numeric:tabular-nums; }
+
+  .page{ max-width:1080px; margin:0 auto; padding:20px 20px 64px; }
+
+  header.top{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:18px 4px 22px; border-bottom:1px solid var(--line); margin-bottom:24px;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:40px; height:40px; border-radius:10px; background:var(--accent); color:var(--accent-ink);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .brand-mark svg{ width:22px; height:22px; }
+  .brand-text .eyebrow{
+    font-size:11.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-soft); font-weight:600;
+  }
+  .brand-text h1{ font-size:22px; font-weight:600; letter-spacing:.01em; }
+  .theme-toggle{
+    border:1px solid var(--line); background:var(--surface); color:var(--ink-soft);
+    border-radius:999px; padding:7px 14px; font-size:12.5px; font-weight:500; cursor:pointer;
+    display:flex; align-items:center; gap:6px; flex-shrink:0;
+  }
+  .theme-toggle:hover{ color:var(--ink); border-color:var(--ink-soft); }
+  .header-actions{ display:flex; align-items:center; gap:10px; }
+  .top-nav{
+    display:flex; gap:4px; background:var(--surface-2); border:1px solid var(--line);
+    border-radius:999px; padding:3px;
+  }
+  .nav-btn{
+    border:none; background:transparent; color:var(--ink-soft); font-size:12.5px; font-weight:600;
+    padding:7px 14px; border-radius:999px; cursor:pointer; font-family:"IBM Plex Sans",sans-serif;
+  }
+  .nav-btn:hover:not(.active){ color:var(--ink); }
+  .nav-btn.active{ background:var(--accent); color:var(--accent-ink); }
+  @media (max-width:620px){
+    header.top{ flex-wrap:wrap; row-gap:10px; }
+    .header-actions{ width:100%; justify-content:space-between; flex-wrap:wrap; row-gap:8px; }
+    .top-nav{ flex:1 1 100%; order:1; }
+    .nav-btn{ flex:1; text-align:center; }
+    .user-badge{ order:2; }
+    #logoutBtn{ order:3; }
+    .theme-toggle{ order:4; }
+  }
+
+  .grid{ display:grid; grid-template-columns: 1.35fr 1fr; gap:20px; align-items:start; }
+  @media (max-width: 860px){ .grid{ grid-template-columns:1fr; } }
+
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:22px 22px 24px;
+  }
+  .card + .card{ margin-top:20px; }
+  .card h2{
+    font-size:13px; text-transform:uppercase; letter-spacing:.08em; font-weight:600;
+    color:var(--ink-soft); margin-bottom:16px; display:flex; align-items:center; gap:8px;
+  }
+  .card h2 .num{
+    width:20px; height:20px; border-radius:50%; background:var(--surface-2); color:var(--ink-soft);
+    font-family:"IBM Plex Mono",monospace; font-size:11px; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line);
+  }
+
+  .field{ margin-bottom:16px; }
+  .field:last-child{ margin-bottom:0; }
+  .field label{ display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; }
+  .field label .req{ color:var(--accent); }
+  .field input[type=text], .field input[type=tel], .field input[type=number]{
+    width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:9px;
+    background:var(--surface-2); color:var(--ink); font-size:14.5px; font-family:inherit;
+  }
+  .field input:focus, .field textarea:focus, .item-add input:focus{
+    outline:2px solid var(--focus); outline-offset:1px; border-color:var(--focus);
+  }
+  .field .hint{ font-size:11.5px; color:var(--ink-soft); margin-top:5px; }
+  .field .err{ font-size:12px; color:var(--bad); margin-top:5px; display:none; font-weight:500; }
+  .field.invalid input, .field.invalid .sig-wrap, .field.invalid .ktp-box{ border-color:var(--bad) !important; }
+  .field.invalid .err{ display:block; }
+
+  .plate-input{ text-transform:uppercase; letter-spacing:.08em; font-family:"IBM Plex Mono",monospace !important; font-weight:600; font-size:17px !important; }
+
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:520px){ .two-col{ grid-template-columns:1fr; } }
+
+  /* valuables list */
+  .item-add{ display:flex; gap:8px; }
+  .item-add input{ flex:1; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); color:var(--ink); font-family:inherit; font-size:14px; }
+  .btn{
+    border:none; border-radius:9px; padding:9px 15px; font-size:13.5px; font-weight:600; cursor:pointer;
+    font-family:"IBM Plex Sans",sans-serif; display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+  }
+  .btn-accent{ background:var(--accent); color:var(--accent-ink); }
+  .btn-accent:hover{ filter:brightness(1.06); }
+  .btn-accent-2{ background:#2FA84F; color:#FFFFFF; }
+  .btn-accent-2:hover{ filter:brightness(1.06); }
+  .btn-ghost{ background:var(--surface-2); color:var(--ink); border:1px solid var(--line); }
+  .btn-ghost:hover{ border-color:var(--ink-soft); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+  .sapaan-toggle{ display:flex; gap:8px; }
+  .sapaan-btn{
+    flex:1; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-soft);
+    border-radius:9px; padding:9px 12px; font-size:13.5px; font-weight:600; cursor:pointer; font-family:"IBM Plex Sans",sans-serif;
+  }
+  .sapaan-btn:hover{ border-color:var(--ink-soft); color:var(--ink); }
+  .sapaan-btn.active{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+
+  .check-row{ display:flex; align-items:center; gap:8px; margin:12px 0 4px; font-size:13px; color:var(--ink-soft); }
+  .check-row input{ width:16px; height:16px; accent-color:var(--accent); }
+
+  .item-check-hint{ font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:8px; }
+  .item-checklist{ display:grid; grid-template-columns:1fr 1fr; gap:7px 14px; margin-bottom:16px; }
+  .item-check-row{ display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--ink); cursor:pointer; }
+  .item-check-row input{ width:16px; height:16px; accent-color:var(--accent); flex-shrink:0; }
+  .item-check-row input:disabled{ cursor:not-allowed; opacity:.5; }
+  .item-add-label{ font-size:12px; color:var(--ink-soft); margin-bottom:6px; }
+  @media (max-width:480px){ .item-checklist{ grid-template-columns:1fr; } }
+
+  .terms-box{
+    max-height:280px; overflow-y:auto; background:var(--surface-2); border:1px solid var(--line);
+    border-radius:9px; padding:14px 16px; font-size:12px; color:var(--ink-soft); line-height:1.6;
+  }
+  .terms-box p{ margin:0 0 4px; color:var(--ink); }
+  .terms-list{ margin:8px 0 0; padding-left:18px; }
+  .terms-list > li{ margin-bottom:10px; }
+  .terms-sublist{ margin:8px 0 0; padding-left:18px; }
+  .terms-sublist li{ margin-bottom:8px; }
+
+  .item-list{ list-style:none; margin:12px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .item-list:empty{ display:none; }
+  .item-list li{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:8px 10px 8px 12px; font-size:13.5px;
+  }
+  .item-list li .rm{
+    border:none; background:transparent; color:var(--ink-soft); cursor:pointer; font-size:15px; line-height:1;
+    width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  }
+  .item-list li .rm:hover{ background:var(--bad-soft); color:var(--bad); }
+  .empty-note{ font-size:12.5px; color:var(--ink-soft); font-style:italic; margin-top:10px; }
+
+  /* queue stub */
+  .stub{ position:relative; overflow:hidden; text-align:center; }
+  .stub .eyebrow{ font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); font-weight:600; }
+  .stub-number{
+    font-family:"Oswald",sans-serif; font-weight:700; font-size:54px; letter-spacing:.02em; color:var(--accent);
+    margin:6px 0 2px; line-height:1;
+  }
+  .stub input.stub-edit{
+    width:100%; text-align:center; border:none; background:transparent; color:var(--accent);
+    font-family:"Oswald",sans-serif; font-weight:700; font-size:54px; padding:0; margin:6px 0 2px;
+  }
+  .stub input.stub-edit:focus{ outline:none; }
+  .stub .stub-date{ font-size:12px; color:var(--ink-soft); }
+  .stub-divider{ position:relative; height:0; border-top:2px dashed var(--line); margin:16px -22px; }
+  .stub-divider::before, .stub-divider::after{
+    content:""; position:absolute; top:-11px; width:22px; height:22px; border-radius:50%; background:var(--paper);
+  }
+  .stub-divider::before{ left:-11px; }
+  .stub-divider::after{ right:-11px; }
+  .stub-note{ font-size:12px; color:var(--ink-soft); }
+
+  /* signature */
+  .sig-wrap{
+    border:1.5px dashed var(--line); border-radius:10px; background:
+      repeating-linear-gradient(var(--surface-2), var(--surface-2) 27px, var(--line) 28px);
+    background-size: 100% 28px; overflow:hidden; position:relative; touch-action:none;
+  }
+  #sigCanvas, #sigCanvas2{ display:block; width:100%; height:170px; touch-action:none; cursor:crosshair; }
+  .sig-placeholder{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:var(--ink-soft); font-size:13px; pointer-events:none; letter-spacing:.02em;
+  }
+  .sig-row{ display:flex; align-items:center; justify-content:space-between; margin-top:10px; }
+  .sig-status{ font-size:12px; font-weight:600; color:var(--ink-soft); display:flex; align-items:center; gap:6px; }
+  .sig-status .dot{ width:7px; height:7px; border-radius:50%; background:var(--ink-soft); }
+  .sig-status.ok{ color:var(--good); } .sig-status.ok .dot{ background:var(--good); }
+
+  .consent-note{
+    background:var(--surface-2); border:1px solid var(--line); border-radius:9px;
+    padding:12px 14px; margin-bottom:14px; font-size:12.5px; color:var(--ink-soft); line-height:1.5;
+  }
+  .consent-note p{ margin:0 0 6px; }
+  .consent-note p:last-child{ margin-bottom:0; }
+  .consent-note .consent-sub{ font-style:italic; font-size:11.5px; }
+
+  /* ktp camera */
+  .ktp-box{
+    border:1.5px dashed var(--line); border-radius:10px; background:var(--surface-2);
+    min-height:180px; display:flex; align-items:center; justify-content:center; flex-direction:column;
+    gap:10px; padding:16px; text-align:center; position:relative; overflow:hidden;
+  }
+  .ktp-box video, .ktp-box img.ktp-preview{ width:100%; border-radius:8px; display:block; }
+  .ktp-box img.ktp-preview{ max-height:220px; object-fit:contain; background:#000; }
+  .ktp-icon{ width:34px; height:34px; color:var(--ink-soft); }
+  .ktp-msg{ font-size:12.5px; color:var(--ink-soft); max-width:260px; }
+  .ktp-actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .hidden{ display:none !important; }
+
+  .submit-row{ display:flex; justify-content:flex-end; gap:10px; margin-top:22px; }
+  .submit-row .btn{ padding:12px 22px; font-size:14.5px; }
+
+  /* ticket / receipt view */
+  #ticketView .ticket-card{ max-width:480px; margin:0 auto; }
+  .receipt-head{ text-align:center; margin-bottom:6px; }
+  .receipt-head .co{ font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); font-weight:600; }
+  .receipt-head h2{ font-size:19px; color:var(--ink); text-transform:none; letter-spacing:0; margin-top:2px; }
+  .receipt-row{ display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line); font-size:13.5px; }
+  .receipt-row:last-child{ border-bottom:none; }
+  .receipt-row .k{ color:var(--ink-soft); }
+  .receipt-row .v{ font-weight:600; text-align:right; }
+  .receipt-list{ margin:4px 0 0; padding-left:18px; font-size:13px; }
+  .receipt-media{ display:flex; gap:12px; margin-top:14px; }
+  .receipt-media figure{ flex:1; margin:0; }
+  .receipt-media img{ width:100%; border-radius:8px; border:1px solid var(--line); background:#fff; display:block; }
+  .receipt-media figcaption{ font-size:11px; color:var(--ink-soft); text-align:center; margin-top:5px; }
+  .sig-name{ margin-top:6px; padding-top:5px; border-top:1px solid var(--line); font-weight:600; font-size:12.5px; color:var(--ink); text-align:center; }
+  .ktp-download-btn{ margin-top:8px; width:100%; justify-content:center; font-size:12px; padding:7px 10px; }
+  .ticket-actions{ display:flex; gap:10px; justify-content:center; margin-top:20px; flex-wrap:wrap; }
+  .ticket-consent{
+    margin-top:16px; padding-top:14px; border-top:1px dashed var(--line);
+    font-size:11.5px; color:var(--ink-soft); line-height:1.5;
+  }
+  .ticket-consent p{ margin:0 0 6px; }
+  .ticket-consent p:last-child{ margin-bottom:0; }
+  .ticket-consent .consent-sub{ font-style:italic; font-size:11px; }
+  .ticket-terms{ margin-top:16px; padding-top:14px; border-top:1px dashed var(--line); font-size:11.5px; color:var(--ink-soft); line-height:1.6; }
+  .ticket-terms .tt-title{ font-size:11.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px; }
+
+  /* daftar form (list view) */
+  .list-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  .list-title{ text-transform:none; letter-spacing:0; font-size:19px; color:var(--ink); font-weight:600; margin-top:2px; font-family:"Oswald",sans-serif; }
+  .list-search{
+    border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:999px;
+    padding:8px 14px; font-size:13px; font-family:inherit; min-width:220px;
+  }
+  .list-search:focus{ outline:2px solid var(--focus); outline-offset:1px; }
+  .list-col-head{
+    display:grid; grid-template-columns: 80px 120px 1fr 1fr 120px; gap:10px; padding:0 14px 8px;
+    font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); font-weight:600;
+  }
+  .list-table{ display:flex; flex-direction:column; gap:8px; }
+  .list-row{
+    display:grid; grid-template-columns: 80px 120px 1fr 1fr 120px; gap:10px; align-items:center;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:11px 14px; font-size:13px;
+    cursor:pointer;
+  }
+  .list-row:hover{ border-color:var(--ink-soft); }
+  .list-row:focus-visible{ outline:2px solid var(--focus); outline-offset:1px; }
+  .list-row .plat-link{
+    font-family:"IBM Plex Mono",monospace; font-weight:700; color:var(--accent); background:none; border:none;
+    padding:0; cursor:pointer; font-size:14px; text-align:left; text-decoration:underline; text-underline-offset:3px;
+  }
+  .list-row .plat-link:hover{ color:var(--ink); }
+  .list-row .lr-nomor{ color:var(--ink-soft); font-family:"IBM Plex Mono",monospace; }
+  .list-row .lr-nama{ color:var(--ink); font-weight:500; }
+  .list-row .lr-model{ color:var(--ink-soft); }
+  .list-row .lr-time{ color:var(--ink-soft); text-align:right; font-family:"IBM Plex Mono",monospace; font-size:12px; }
+  @media (max-width:640px){
+    .list-col-head{ display:none; }
+    .list-row{ grid-template-columns:1fr 1fr; row-gap:5px; }
+    .list-row .lr-time{ text-align:left; grid-column:1/-1; }
+  }
+
+  details.history{ margin-top:26px; }
+  details.history summary{
+    cursor:pointer; font-size:12.5px; font-weight:600; color:var(--ink-soft); list-style:none;
+    display:flex; align-items:center; gap:6px; padding:8px 2px;
+  }
+  details.history summary::-webkit-details-marker{ display:none; }
+  details.history summary::before{ content:"▸"; font-size:10px; }
+  details.history[open] summary::before{ content:"▾"; }
+  .hist-list{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+  .hist-row{
+    display:flex; justify-content:space-between; gap:10px; font-size:12.5px; background:var(--surface);
+    border:1px solid var(--line); border-radius:8px; padding:8px 12px; color:var(--ink-soft);
+  }
+  .hist-row b{ color:var(--ink); font-family:"IBM Plex Mono",monospace; }
+  .hist-empty{ font-size:12.5px; color:var(--ink-soft); font-style:italic; }
+
+  [hidden]{ display:none !important; }
+
+  /* auth / login gate */
+  .boot-screen{
+    min-height:70vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px;
+    color:var(--ink-soft); font-size:13px;
+  }
+  .boot-spinner{
+    width:26px; height:26px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--accent);
+    animation:spin 0.8s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce){ .boot-spinner{ animation-duration:2s; } }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .auth-wrap{ min-height:70vh; display:flex; align-items:center; justify-content:center; }
+  .auth-card{ width:100%; max-width:360px; text-align:center; }
+  .auth-card .brand-mark{ margin:0 auto 14px; }
+  .auth-card h2{ font-size:19px; text-transform:none; letter-spacing:0; color:var(--ink); justify-content:center; margin-bottom:4px; }
+  .auth-card .sub{ font-size:12.5px; color:var(--ink-soft); margin-bottom:20px; }
+  .auth-card .field{ text-align:left; }
+  .auth-card .btn{ width:100%; justify-content:center; margin-top:6px; padding:11px; font-size:14px; }
+  .auth-error{
+    background:var(--bad-soft); color:var(--bad); font-size:12.5px; font-weight:500; border-radius:8px;
+    padding:9px 12px; margin-bottom:14px; display:none; text-align:left;
+  }
+  .auth-error.show{ display:block; }
+  .user-badge{
+    font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; white-space:nowrap;
+  }
+  .user-badge .dot{ width:7px; height:7px; border-radius:50%; background:var(--good); flex-shrink:0; }
+  .global-error{
+    background:var(--bad-soft); color:var(--bad); border-radius:10px; padding:10px 14px; font-size:13px;
+    font-weight:500; margin-bottom:18px; display:none;
+  }
+  .global-error.show{ display:block; }
+
+  @media print{
+    body{ background:#fff; }
+    header.top, .submit-row, details.history, #formView, #listView{ display:none !important; }
+    #authView, #bootScreen{ display:none !important; }
+    .page{ padding:0; max-width:100%; }
+    #ticketView{ display:block !important; }
+    .ticket-card{ box-shadow:none; border:1px solid #999; max-width:340px; margin:0 auto; }
+    .ticket-actions{ display:none !important; }
+    .ktp-download-btn{ display:none !important; }
+  }
+</style>
+
+<div class="page">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5"></circle><path d="M10.5 11.5 21 22"></path><path d="M17 15l3-3"></path><path d="M14 18l2.5-2.5"></path></svg>
+      </div>
+      <div class="brand-text">
+        <div class="eyebrow">Perintis Perkasa</div>
+        <h1>Key Drop Service</h1>
+      </div>
+    </div>
+    <div class="header-actions" id="headerActions" hidden>
+      <nav class="top-nav" id="topNav">
+        <button class="nav-btn active" data-view="form" type="button">Isi Form</button>
+        <button class="nav-btn" data-view="list" type="button">Daftar Form</button>
+      </nav>
+      <span class="user-badge" id="userBadge" hidden><span class="dot"></span><span>Terhubung</span></span>
+      <button class="btn btn-ghost" id="logoutBtn" type="button" hidden>Keluar</button>
+      <button class="theme-toggle" id="themeToggle" type="button">🌓 Tema</button>
+    </div>
+  </header>
+
+  <div id="bootScreen" class="boot-screen">
+    <div class="boot-spinner"></div>
+    <div>Memuat…</div>
+  </div>
+
+  <div id="authView" hidden>
+    <div class="auth-wrap">
+      <div class="card auth-card">
+        <div class="brand-mark" style="width:44px;height:44px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><circle cx="8" cy="8" r="5"></circle><path d="M10.5 11.5 21 22"></path><path d="M17 15l3-3"></path><path d="M14 18l2.5-2.5"></path></svg>
+        </div>
+        <h2>Masuk Staf</h2>
+        <div class="sub">Perintis Perkasa — Key Drop Service</div>
+        <div class="auth-error" id="authError"></div>
+        <div class="field">
+          <label>Kode Akses Staf</label>
+          <input type="password" id="authCode" autocomplete="off" placeholder="Masukkan kode akses">
+        </div>
+        <button class="btn btn-accent" id="authSubmitBtn" type="button">Masuk</button>
+        <div class="sub" style="margin-top:16px;margin-bottom:0;">Lupa kode akses? Tanya admin toko — kode diatur lewat Apps Script (Script Properties).</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="appShell" hidden>
+  <div class="global-error" id="globalError"></div>
+
+  <main id="formView">
+    <div class="grid">
+      <!-- LEFT COLUMN -->
+      <div>
+        <div class="card">
+          <h2><span class="num">1</span> Data Kendaraan</h2>
+          <div class="two-col">
+            <div class="field" id="f-plat">
+              <label>Plat Nopol <span class="req">*</span></label>
+              <input type="text" id="plat" class="plate-input" placeholder="B 1234 ABC" autocomplete="off">
+              <div class="err">Plat nopol wajib diisi.</div>
+            </div>
+            <div class="field" id="f-model">
+              <label>Model Kendaraan <span class="req">*</span></label>
+              <input type="text" id="model" placeholder="Toyota Avanza, Hitam" autocomplete="off">
+              <div class="err">Model kendaraan wajib diisi.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="num">2</span> Data Customer</h2>
+          <div class="two-col">
+            <div class="field" id="f-nama">
+              <label>Nama Customer <span class="req">*</span></label>
+              <input type="text" id="nama" placeholder="Nama lengkap" autocomplete="off">
+              <div class="err">Nama customer wajib diisi.</div>
+            </div>
+            <div class="field" id="f-hp">
+              <label>No HP <span class="req">*</span></label>
+              <input type="tel" id="hp" placeholder="08xxxxxxxxxx" autocomplete="off">
+              <div class="err">Nomor HP wajib diisi.</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Sapaan (untuk pesan WhatsApp)</label>
+            <div class="sapaan-toggle" id="sapaanToggle">
+              <button type="button" class="sapaan-btn active" data-value="Bp">Bapak</button>
+              <button type="button" class="sapaan-btn" data-value="Ibu">Ibu</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="num">3</span> Barang Berharga di Mobil</h2>
+          <div class="item-check-hint">Centang barang yang dititipkan di dalam mobil:</div>
+          <div class="item-checklist" id="itemChecklist">
+            <label class="item-check-row"><input type="checkbox" data-item="Uang Tunai"> Uang Tunai</label>
+            <label class="item-check-row"><input type="checkbox" data-item="Emas / Perhiasan"> Emas / Perhiasan</label>
+            <label class="item-check-row"><input type="checkbox" data-item="Dompet"> Dompet</label>
+            <label class="item-check-row"><input type="checkbox" data-item="Tas"> Tas</label>
+            <label class="item-check-row"><input type="checkbox" data-item="Laptop"> Laptop</label>
+            <label class="item-check-row"><input type="checkbox" data-item="Tablet / iPad"> Tablet / iPad</label>
+            <label class="item-check-row"><input type="checkbox" data-item="Handphone / Gadget"> Handphone / Gadget</label>
+            <label class="item-check-row"><input type="checkbox" data-item="Kamera"> Kamera</label>
+            <label class="item-check-row"><input type="checkbox" data-item="Jam Tangan"> Jam Tangan</label>
+            <label class="item-check-row"><input type="checkbox" data-item="Kacamata"> Kacamata</label>
+            <label class="item-check-row"><input type="checkbox" data-item="Dokumen Penting"> Dokumen Penting</label>
+            <label class="item-check-row"><input type="checkbox" data-item="Kunci Cadangan"> Kunci Cadangan</label>
+          </div>
+          <div class="item-add-label">Barang lain yang tidak ada di daftar:</div>
+          <div class="item-add">
+            <input type="text" id="itemInput" placeholder="Contoh: action camera, drone...">
+            <button class="btn btn-ghost" id="itemAddBtn" type="button">+ Tambah</button>
+          </div>
+          <ul class="item-list" id="itemList"></ul>
+          <p class="empty-note" id="itemEmptyNote">Belum ada barang berharga yang dicatat.</p>
+          <label class="check-row">
+            <input type="checkbox" id="noItems"> Tidak ada barang berharga dititipkan di dalam mobil
+          </label>
+        </div>
+
+        <div class="card">
+          <h2><span class="num">4</span> Syarat &amp; Ketentuan</h2>
+          <div class="terms-box">
+            <p><strong>Syarat Ketentuan:</strong></p>
+            <ol class="terms-list">
+              <li>Guna melindungi hak privasi sesuai dengan peraturan perundang-undangan dan untuk senantiasa meningkatkan kualitas produk/layanan, Saya (Pemilik/Pembawa) memberikan persetujuan kepada PT. Perintis Perkasa dan/atau Distributor untuk:
+                <ol type="a" class="terms-sublist">
+                  <li>Menerapkan sistem, prosedur dan perangkat teknis serta mengambil tindakan lain yang wajar yang sesuai dengan Peraturan Perundang-Undangan untuk melindungi data pribadi yang diberikan oleh Pemilik/Pembawa terkait formulir ini serta data-data transaksi antara Pemilik/Pembawa dengan PT. Perintis Perkasa ("Data Pemilik/Pembawa").</li>
+                  <li>Mengolah, mengirimkan dan memusnahkan Data Pemilik/Pembawa selama jangka waktu yang ditentukan dalam Peraturan Perundang-Undangan termasuk bekerjasama dengan pihak lainnya di wilayah pemasaran distributor dengan tujuan untuk menawarkan opsi manfaat bagi konsumen.</li>
+                </ol>
+              </li>
+              <li>Apabila terdapat data pribadi di luar Data Pemilik/Pembawa yang tercantum dalam formulir ini, maka Saya (Pemilik/Pembawa) menyatakan dan menjamin bahwa Saya (Pemilik/Pembawa) telah mendapatkan persetujuan dan/atau izin dari pemilik data pribadi tersebut. Pemilik/Pembawa bertanggung jawab penuh atas pencantuman, penggunaan, termasuk kebenaran data pribadi tersebut, serta membebaskan PT. Perintis Perkasa dan/atau Distributor dari dan atas semua tanggung jawab, kerugian, klaim yang akan atau mungkin timbul akibat pencantuman dan/atau penggunaan data pribadi di luar Data Pemilik/Pembawa dalam formulir ini berdasarkan peraturan perundang-undangan yang berlaku.</li>
+              <li>Dalam hal Saya (Pemilik/Pembawa) ingin memperbaiki data, mengakhiri pemrosesan, menarik persetujuan, mengajukan keberatan, membatasi pemrosesan data diri secara proporsional, menghapus, serta hak lain sesuai dengan Peraturan Perundang-Undangan, Pemilik/Pembawa dapat mengajukan permohonan secara tertulis kepada PT. Perintis Perkasa.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div>
+        <div class="card stub">
+          <div class="eyebrow">Nomor Antrian</div>
+          <input type="text" class="stub-edit mono" id="antrian" value="001" placeholder="cth. A006">
+          <div class="stub-date mono" id="stubDate">—</div>
+          <div class="stub-divider"></div>
+          <div class="stub-note">Cocokkan nomor ini dengan tag kunci fisik sebelum diserahkan ke customer.</div>
+        </div>
+
+        <div class="card" id="f-sig">
+          <h2><span class="num">5</span> Tanda Tangan Pelanggan</h2>
+          <div class="consent-note">
+            <p>Saya yang bertanda tangan di form ini menyatakan bahwa saya sudah menyerahkan kendaraan (Mobil) ke Perintis Perkasa Adam Malik Medan dengan kondisi seperti di atas.</p>
+            <p class="consent-sub">Catatan: kondisi kendaraan saat saya serahkan ke Perintis Perkasa Adam Malik belum dilakukan Walk Around Check (WAC) oleh SA.</p>
+          </div>
+          <div class="sig-wrap">
+            <canvas id="sigCanvas"></canvas>
+            <div class="sig-placeholder" id="sigPlaceholder">Tanda tangan di sini</div>
+          </div>
+          <div class="sig-row">
+            <span class="sig-status" id="sigStatus"><span class="dot"></span> Belum ditandatangani</span>
+            <button class="btn btn-ghost" id="sigClear" type="button">Hapus</button>
+          </div>
+          <div class="err" id="sigErr">Tanda tangan customer wajib diisi.</div>
+        </div>
+
+        <div class="card" id="f-sig2">
+          <h2><span class="num">6</span> Tanda Tangan Penerima</h2>
+          <div class="sig-wrap">
+            <canvas id="sigCanvas2"></canvas>
+            <div class="sig-placeholder" id="sigPlaceholder2">Tanda tangan petugas penerima di sini</div>
+          </div>
+          <div class="sig-row">
+            <span class="sig-status" id="sigStatus2"><span class="dot"></span> Belum ditandatangani</span>
+            <button class="btn btn-ghost" id="sigClear2" type="button">Hapus</button>
+          </div>
+          <div class="err" id="sigErr2">Tanda tangan petugas penerima wajib diisi.</div>
+        </div>
+
+        <div class="card" id="f-ktp">
+          <h2><span class="num">7</span> Foto KTP</h2>
+          <div class="ktp-box" id="ktpBox">
+            <svg class="ktp-icon" id="ktpIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><circle cx="8" cy="12" r="2.2"></circle><path d="M13 10h6M13 14h4"></path></svg>
+            <div class="ktp-msg" id="ktpMsg">Ambil foto KTP langsung dari kamera perangkat.</div>
+            <video id="ktpVideo" class="hidden" autoplay playsinline muted></video>
+            <img id="ktpPreview" class="ktp-preview hidden" alt="Foto KTP customer">
+            <div class="ktp-actions">
+              <button class="btn btn-accent" id="ktpOpenBtn" type="button">📷 Buka Kamera</button>
+              <button class="btn btn-ghost hidden" id="ktpShotBtn" type="button">Ambil Foto</button>
+              <button class="btn btn-ghost hidden" id="ktpCancelBtn" type="button">Batal</button>
+              <button class="btn btn-ghost hidden" id="ktpRetakeBtn" type="button">Ambil Ulang</button>
+            </div>
+          </div>
+          <input type="file" accept="image/*" capture="environment" id="ktpFileInput" class="hidden">
+          <div class="err" id="ktpErr">Foto KTP customer wajib diambil.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <button class="btn btn-ghost" id="resetBtn" type="button">Bersihkan Form</button>
+      <button class="btn btn-accent" id="submitBtn" type="button">Simpan &amp; Buat Tiket</button>
+    </div>
+
+    <details class="history">
+      <summary>Riwayat Hari Ini (<span id="histCount">0</span>)</summary>
+      <div class="hist-list" id="histList"></div>
+    </details>
+  </main>
+
+  <section id="ticketView" hidden>
+    <div class="card ticket-card">
+      <div class="receipt-head">
+        <div class="co">Perintis Perkasa — Key Drop Service</div>
+        <h2>Tiket Titip Kunci</h2>
+      </div>
+      <div class="stub" style="margin:10px 0 4px;">
+        <div class="eyebrow">Nomor Antrian</div>
+        <div class="stub-number mono" id="rNomor">001</div>
+        <div class="stub-date mono" id="rTanggal">—</div>
+      </div>
+      <div class="stub-divider" style="margin:14px 0;"></div>
+      <div class="receipt-row"><span class="k">Plat Nopol</span><span class="v mono" id="rPlat">—</span></div>
+      <div class="receipt-row"><span class="k">Model Kendaraan</span><span class="v" id="rModel">—</span></div>
+      <div class="receipt-row"><span class="k">Nama Customer</span><span class="v" id="rNama">—</span></div>
+      <div class="receipt-row"><span class="k">No HP</span><span class="v mono" id="rHp">—</span></div>
+      <div class="receipt-row" style="display:block;">
+        <span class="k">Barang Berharga</span>
+        <ul class="receipt-list" id="rBarang"></ul>
+      </div>
+      <div class="ticket-terms">
+        <div class="tt-title">Syarat &amp; Ketentuan</div>
+        <ol class="terms-list">
+          <li>Guna melindungi hak privasi sesuai dengan peraturan perundang-undangan dan untuk senantiasa meningkatkan kualitas produk/layanan, Saya (Pemilik/Pembawa) memberikan persetujuan kepada PT. Perintis Perkasa dan/atau Distributor untuk:
+            <ol type="a" class="terms-sublist">
+              <li>Menerapkan sistem, prosedur dan perangkat teknis serta mengambil tindakan lain yang wajar yang sesuai dengan Peraturan Perundang-Undangan untuk melindungi data pribadi yang diberikan oleh Pemilik/Pembawa terkait formulir ini serta data-data transaksi antara Pemilik/Pembawa dengan PT. Perintis Perkasa ("Data Pemilik/Pembawa").</li>
+              <li>Mengolah, mengirimkan dan memusnahkan Data Pemilik/Pembawa selama jangka waktu yang ditentukan dalam Peraturan Perundang-Undangan termasuk bekerjasama dengan pihak lainnya di wilayah pemasaran distributor dengan tujuan untuk menawarkan opsi manfaat bagi konsumen.</li>
+            </ol>
+          </li>
+          <li>Apabila terdapat data pribadi di luar Data Pemilik/Pembawa yang tercantum dalam formulir ini, maka Saya (Pemilik/Pembawa) menyatakan dan menjamin bahwa Saya (Pemilik/Pembawa) telah mendapatkan persetujuan dan/atau izin dari pemilik data pribadi tersebut. Pemilik/Pembawa bertanggung jawab penuh atas pencantuman, penggunaan, termasuk kebenaran data pribadi tersebut, serta membebaskan PT. Perintis Perkasa dan/atau Distributor dari dan atas semua tanggung jawab, kerugian, klaim yang akan atau mungkin timbul akibat pencantuman dan/atau penggunaan data pribadi di luar Data Pemilik/Pembawa dalam formulir ini berdasarkan peraturan perundang-undangan yang berlaku.</li>
+          <li>Dalam hal Saya (Pemilik/Pembawa) ingin memperbaiki data, mengakhiri pemrosesan, menarik persetujuan, mengajukan keberatan, membatasi pemrosesan data diri secara proporsional, menghapus, serta hak lain sesuai dengan Peraturan Perundang-Undangan, Pemilik/Pembawa dapat mengajukan permohonan secara tertulis kepada PT. Perintis Perkasa.</li>
+        </ol>
+      </div>
+      <div class="receipt-media">
+        <figure>
+          <img id="rSig" alt="Tanda tangan customer">
+          <div class="sig-name" id="rSigName"></div>
+          <figcaption>Tanda Tangan Customer</figcaption>
+        </figure>
+        <figure>
+          <img id="rSigPenerima" alt="Tanda tangan petugas penerima">
+          <div class="sig-name">Petugas Penerima</div>
+          <figcaption>Tanda Tangan Penerima</figcaption>
+        </figure>
+      </div>
+      <div class="receipt-media">
+        <figure>
+          <img id="rKtp" alt="Foto KTP customer">
+          <figcaption>Foto KTP</figcaption>
+          <a class="btn btn-ghost ktp-download-btn" id="ktpDownloadLink" href="#" target="_blank" rel="noopener">⬇️ Unduh Foto KTP</a>
+        </figure>
+      </div>
+      <div class="ticket-consent">
+        <p>Saya yang bertanda tangan di form ini menyatakan bahwa saya sudah menyerahkan kendaraan (Mobil) ke Perintis Perkasa Adam Malik Medan dengan kondisi seperti di atas.</p>
+        <p class="consent-sub">Catatan: kondisi kendaraan saat saya serahkan ke Perintis Perkasa Adam Malik belum dilakukan Walk Around Check (WAC) oleh SA.</p>
+      </div>
+    </div>
+    <div class="ticket-actions">
+      <button class="btn btn-ghost" id="printBtn" type="button">🖨️ Cetak Tiket</button>
+      <button class="btn btn-accent" id="waShareBtn" type="button">📤 Kirim Gambar ke WhatsApp</button>
+      <button class="btn btn-accent-2" id="waOpenChatBtn" type="button">💬 Buka Chat WhatsApp</button>
+      <button class="btn btn-ghost" id="copyHpBtn" type="button">📋 Salin No. HP</button>
+      <button class="btn btn-ghost" id="ticketBackBtn" type="button">+ Form Baru</button>
+    </div>
+    <p class="hist-empty" id="waShareStatus" style="text-align:center;margin-top:10px;"></p>
+  </section>
+
+  <section id="listView" hidden>
+    <div class="card" style="max-width:820px;margin:0 auto;">
+      <div class="list-head">
+        <div>
+          <div class="eyebrow" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;">Perintis Perkasa</div>
+          <h2 class="list-title">Daftar Form Titip Kunci</h2>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="text" id="listSearch" placeholder="Cari plat nopol / nama..." class="list-search">
+          <button class="btn btn-ghost" id="listRefreshBtn" type="button">↻ Muat Ulang</button>
+        </div>
+      </div>
+      <div class="list-col-head">
+        <span>No. Antrian</span><span>Plat Nopol</span><span>Nama Customer</span><span>Model</span><span style="text-align:right;">Waktu</span>
+      </div>
+      <div class="list-table" id="listTable"></div>
+      <p class="hist-empty" id="listEmpty">Belum ada form yang diisi.</p>
+    </div>
+  </section>
+  </div><!-- /#appShell -->
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- theme toggle ---------- */
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('themeToggle');
+  function applyStoredTheme(){
+    try{
+      var t = localStorage.getItem('keydrop_theme');
+      if(t === 'dark' || t === 'light') root.setAttribute('data-theme', t);
+    }catch(e){}
+  }
+  themeBtn.addEventListener('click', function(){
+    var cur = root.getAttribute('data-theme');
+    var mql = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var next;
+    if(!cur){ next = mql ? 'light' : 'dark'; }
+    else if(cur === 'dark'){ next = 'light'; }
+    else { next = 'dark'; }
+    root.setAttribute('data-theme', next);
+    try{ localStorage.setItem('keydrop_theme', next); }catch(e){}
+  });
+  applyStoredTheme();
+
+  /* ---------- helpers ---------- */
+  function pad(n,len){ n=String(n); while(n.length<len) n='0'+n; return n; }
+  function todayKey(){
+    var d = new Date();
+    return d.getFullYear()+'-'+pad(d.getMonth()+1,2)+'-'+pad(d.getDate(),2);
+  }
+  function todayLabel(){
+    var d = new Date();
+    var bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    return pad(d.getDate(),2)+' '+bulan[d.getMonth()]+' '+d.getFullYear();
+  }
+
+  var globalErrorEl = document.getElementById('globalError');
+  function showGlobalError(msg){
+    if(!msg){ globalErrorEl.classList.remove('show'); globalErrorEl.textContent=''; return; }
+    globalErrorEl.textContent = msg; globalErrorEl.classList.add('show');
+  }
+
+  /* ---------- queue number (dihitung dari data hari ini di Google Sheet) ---------- */
+  var antrianInput = document.getElementById('antrian');
+  var stubDate = document.getElementById('stubDate');
+  stubDate.textContent = todayLabel();
+  var antrianAuto = true; // jadi false begitu staf mengetik manual
+  antrianInput.addEventListener('input', function(e){
+    antrianAuto = false;
+    var upper = e.target.value.toUpperCase();
+    if(upper !== e.target.value) e.target.value = upper;
+  });
+  function countTodayFromCache(){
+    var today = todayKey();
+    return submissionsCache.filter(function(s){ return s.dateKey === today; }).length;
+  }
+  function refreshQueueNumber(){
+    if(!antrianAuto) return;
+    antrianInput.value = pad(countTodayFromCache() + 1, 3);
+  }
+  antrianInput.value = pad(1,3);
+
+  /* ---------- sapaan (Bapak/Ibu, dipakai di sapaan pesan WhatsApp) ---------- */
+  var sapaanValue = 'Bp';
+  var sapaanBtns = Array.prototype.slice.call(document.querySelectorAll('.sapaan-btn'));
+  sapaanBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      sapaanValue = btn.getAttribute('data-value');
+      sapaanBtns.forEach(function(b){ b.classList.toggle('active', b === btn); });
+    });
+  });
+
+  /* ---------- valuables list ---------- */
+  var items = []; // barang custom (diketik manual lewat kolom "Barang lain")
+  var presetChecked = []; // label barang dari daftar centang yang sedang dipilih
+  var itemInput = document.getElementById('itemInput');
+  var itemAddBtn = document.getElementById('itemAddBtn');
+  var itemList = document.getElementById('itemList');
+  var itemEmptyNote = document.getElementById('itemEmptyNote');
+  var noItems = document.getElementById('noItems');
+  var itemChecklist = document.getElementById('itemChecklist');
+  var presetCheckboxes = Array.prototype.slice.call(itemChecklist.querySelectorAll('input[type="checkbox"]'));
+
+  function allItems(){ return presetChecked.concat(items); }
+
+  presetCheckboxes.forEach(function(cb){
+    cb.addEventListener('change', function(){
+      var label = cb.getAttribute('data-item');
+      if(cb.checked){
+        if(presetChecked.indexOf(label) === -1) presetChecked.push(label);
+      } else {
+        var idx = presetChecked.indexOf(label);
+        if(idx !== -1) presetChecked.splice(idx, 1);
+      }
+      renderItems();
+    });
+  });
+
+  function renderItems(){
+    itemList.innerHTML = '';
+    items.forEach(function(txt, idx){
+      var li = document.createElement('li');
+      var span = document.createElement('span');
+      span.textContent = txt;
+      var rm = document.createElement('button');
+      rm.className = 'rm'; rm.type='button'; rm.innerHTML = '&times;';
+      rm.setAttribute('aria-label','Hapus barang');
+      rm.addEventListener('click', function(){ items.splice(idx,1); renderItems(); });
+      li.appendChild(span); li.appendChild(rm);
+      itemList.appendChild(li);
+    });
+    itemEmptyNote.style.display = (allItems().length === 0 && !noItems.checked) ? 'block' : 'none';
+  }
+  function addItem(){
+    var v = itemInput.value.trim();
+    if(!v) return;
+    items.push(v);
+    itemInput.value = '';
+    renderItems();
+    itemInput.focus();
+  }
+  itemAddBtn.addEventListener('click', addItem);
+  itemInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); addItem(); } });
+  noItems.addEventListener('change', function(){
+    var disabled = noItems.checked;
+    itemInput.disabled = disabled; itemAddBtn.disabled = disabled;
+    presetCheckboxes.forEach(function(cb){ cb.disabled = disabled; });
+    if(disabled){
+      items = []; presetChecked = [];
+      presetCheckboxes.forEach(function(cb){ cb.checked = false; });
+    }
+    renderItems();
+  });
+  renderItems();
+
+  /* ---------- signature pad (dipakai untuk tanda tangan pelanggan & petugas penerima) ---------- */
+  function currentInk(){
+    return getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#1B2430';
+  }
+  function createSignaturePad(ids){
+    var canvas = document.getElementById(ids.canvas);
+    var ctx = canvas.getContext('2d');
+    var placeholder = document.getElementById(ids.placeholder);
+    var statusEl = document.getElementById(ids.status);
+    var clearBtn = document.getElementById(ids.clear);
+    var fieldEl = document.getElementById(ids.field);
+    var empty = true;
+    var drawing = false;
+
+    function sizeCanvas(){
+      var ratio = window.devicePixelRatio || 1;
+      var rect = canvas.getBoundingClientRect();
+      var prevEmpty = empty;
+      canvas.width = Math.max(1, rect.width * ratio);
+      canvas.height = Math.max(1, rect.height * ratio);
+      ctx.setTransform(ratio,0,0,ratio,0,0);
+      ctx.lineWidth = 2.4;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = currentInk();
+      empty = prevEmpty; // resizing (before drawing) shouldn't itself count as drawn
+    }
+    function pos(e){
+      var rect = canvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+    function setStatus(ok){
+      statusEl.classList.toggle('ok', ok);
+      statusEl.innerHTML = ok ? '<span class="dot"></span> Tanda tangan tersimpan' : '<span class="dot"></span> Belum ditandatangani';
+    }
+    canvas.addEventListener('pointerdown', function(e){
+      drawing = true; empty = false; placeholder.style.display='none'; setStatus(true);
+      ctx.strokeStyle = currentInk();
+      var p = pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);
+      canvas.setPointerCapture(e.pointerId);
+    });
+    canvas.addEventListener('pointermove', function(e){
+      if(!drawing) return;
+      var p = pos(e); ctx.lineTo(p.x,p.y); ctx.stroke();
+    });
+    function stopDraw(){ drawing = false; }
+    canvas.addEventListener('pointerup', stopDraw);
+    canvas.addEventListener('pointercancel', stopDraw);
+    canvas.addEventListener('pointerleave', function(){ if(drawing) stopDraw(); });
+
+    function clearPad(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      empty = true; placeholder.style.display='flex'; setStatus(false);
+    }
+    clearBtn.addEventListener('click', function(){
+      clearPad();
+      if(fieldEl) fieldEl.classList.remove('invalid');
+    });
+
+    window.addEventListener('resize', function(){ if(empty) sizeCanvas(); });
+    setTimeout(sizeCanvas, 30);
+
+    return {
+      isEmpty: function(){ return empty; },
+      resize: function(){ sizeCanvas(); },
+      clear: clearPad,
+      dataUrl: function(inkHex){ return normalizedSignatureDataUrl(canvas, inkHex); }
+    };
+  }
+
+  var sigCustomer = createSignaturePad({ canvas:'sigCanvas', placeholder:'sigPlaceholder', status:'sigStatus', clear:'sigClear', field:'f-sig' });
+  var sigStaff = createSignaturePad({ canvas:'sigCanvas2', placeholder:'sigPlaceholder2', status:'sigStatus2', clear:'sigClear2', field:'f-sig2' });
+
+  /* ---------- KTP camera capture ---------- */
+  var ktpBox = document.getElementById('ktpBox');
+  var ktpIcon = document.getElementById('ktpIcon');
+  var ktpMsg = document.getElementById('ktpMsg');
+  var ktpVideo = document.getElementById('ktpVideo');
+  var ktpPreview = document.getElementById('ktpPreview');
+  var ktpOpenBtn = document.getElementById('ktpOpenBtn');
+  var ktpShotBtn = document.getElementById('ktpShotBtn');
+  var ktpCancelBtn = document.getElementById('ktpCancelBtn');
+  var ktpRetakeBtn = document.getElementById('ktpRetakeBtn');
+  var ktpFileInput = document.getElementById('ktpFileInput');
+  var ktpStream = null;
+  var ktpDataUrl = null;
+
+  function stopStream(){
+    if(ktpStream){ ktpStream.getTracks().forEach(function(t){ t.stop(); }); ktpStream = null; }
+  }
+  function showIdle(){
+    ktpIcon.classList.remove('hidden'); ktpMsg.classList.remove('hidden'); ktpMsg.textContent = 'Ambil foto KTP langsung dari kamera perangkat.';
+    ktpVideo.classList.add('hidden'); ktpPreview.classList.add('hidden');
+    ktpOpenBtn.classList.remove('hidden'); ktpOpenBtn.textContent = '📷 Buka Kamera';
+    ktpShotBtn.classList.add('hidden'); ktpCancelBtn.classList.add('hidden'); ktpRetakeBtn.classList.add('hidden');
+  }
+  function showLive(){
+    ktpIcon.classList.add('hidden'); ktpMsg.classList.add('hidden');
+    ktpVideo.classList.remove('hidden'); ktpPreview.classList.add('hidden');
+    ktpOpenBtn.classList.add('hidden'); ktpShotBtn.classList.remove('hidden'); ktpCancelBtn.classList.remove('hidden'); ktpRetakeBtn.classList.add('hidden');
+  }
+  function showPreview(){
+    ktpIcon.classList.add('hidden'); ktpMsg.classList.add('hidden');
+    ktpVideo.classList.add('hidden'); ktpPreview.classList.remove('hidden');
+    ktpOpenBtn.classList.add('hidden'); ktpShotBtn.classList.add('hidden'); ktpCancelBtn.classList.add('hidden'); ktpRetakeBtn.classList.remove('hidden');
+    document.getElementById('f-ktp').classList.remove('invalid');
+  }
+
+  async function openCamera(){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      ktpFileInput.click();
+      return;
+    }
+    try{
+      ktpStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      ktpVideo.srcObject = ktpStream;
+      showLive();
+    }catch(err){
+      ktpIcon.classList.remove('hidden'); ktpMsg.classList.remove('hidden');
+      ktpMsg.textContent = 'Kamera tidak tersedia atau izin ditolak. Unggah foto dari galeri.';
+      ktpFileInput.click();
+    }
+  }
+  ktpOpenBtn.addEventListener('click', openCamera);
+  ktpCancelBtn.addEventListener('click', function(){ stopStream(); showIdle(); });
+  ktpShotBtn.addEventListener('click', function(){
+    var w = ktpVideo.videoWidth || 640, h = ktpVideo.videoHeight || 480;
+    var c = document.createElement('canvas'); c.width = w; c.height = h;
+    c.getContext('2d').drawImage(ktpVideo, 0, 0, w, h);
+    ktpDataUrl = c.toDataURL('image/jpeg', 0.87);
+    ktpPreview.src = ktpDataUrl;
+    stopStream();
+    showPreview();
+  });
+  ktpRetakeBtn.addEventListener('click', function(){ ktpDataUrl = null; openCamera(); });
+  ktpFileInput.addEventListener('change', function(){
+    var file = ktpFileInput.files && ktpFileInput.files[0];
+    if(!file) { if(!ktpDataUrl) showIdle(); return; }
+    var reader = new FileReader();
+    reader.onload = function(){ ktpDataUrl = reader.result; ktpPreview.src = ktpDataUrl; showPreview(); };
+    reader.readAsDataURL(file);
+  });
+  showIdle();
+
+  /* ---------- submissions store (Google Sheets lewat Apps Script) ---------- */
+  var submissionsCache = [];
+  var accessCode = '';
+
+  function apiUrl(params){
+    var url = CONFIG.WEBAPP_URL;
+    var qs = Object.keys(params || {}).map(function(k){ return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
+    return qs ? (url + (url.indexOf('?') === -1 ? '?' : '&') + qs) : url;
+  }
+
+  function fetchSubmissions(){
+    if(!CONFIG.WEBAPP_URL || CONFIG.WEBAPP_URL.indexOf('GANTI_') === 0) return Promise.resolve({ ok:false, message:'Web App URL belum diatur.' });
+    return fetch(apiUrl({ code: accessCode }), { method:'GET' })
+      .then(function(res){ return res.json(); })
+      .catch(function(err){ return { ok:false, message: 'Tidak bisa menghubungi server: ' + err.message }; });
+  }
+
+  function refreshSubmissions(){
+    return fetchSubmissions().then(function(res){
+      if(res && res.ok){
+        submissionsCache = res.data || [];
+        renderHistory();
+        renderList(listSearch.value);
+        refreshQueueNumber();
+        showGlobalError('');
+      } else {
+        showGlobalError((res && res.message) || 'Gagal memuat data dari server.');
+      }
+      return res;
+    });
+  }
+
+  var listRefreshBtn = document.getElementById('listRefreshBtn');
+  listRefreshBtn.addEventListener('click', function(){
+    listRefreshBtn.disabled = true; listRefreshBtn.textContent = 'Memuat…';
+    refreshSubmissions().then(function(){
+      listRefreshBtn.disabled = false; listRefreshBtn.textContent = '↻ Muat Ulang';
+    });
+  });
+
+  var histList = document.getElementById('histList');
+  var histCount = document.getElementById('histCount');
+  function renderHistory(){
+    var today = todayKey();
+    var entries = submissionsCache.filter(function(s){ return s.dateKey === today; });
+    histCount.textContent = entries.length;
+    histList.innerHTML = '';
+    if(entries.length === 0){
+      histList.innerHTML = '<div class="hist-empty">Belum ada titip kunci hari ini.</div>';
+      return;
+    }
+    entries.forEach(function(s){
+      var row = document.createElement('div');
+      row.className = 'hist-row';
+      row.innerHTML = '<span><b>No. '+s.nomor+'</b> &nbsp;'+s.plat+' — '+s.nama+'</span><span>'+s.time+'</span>';
+      histList.appendChild(row);
+    });
+  }
+
+  /* ---------- daftar form (list view) ---------- */
+  var listTable = document.getElementById('listTable');
+  var listEmpty = document.getElementById('listEmpty');
+  var listSearch = document.getElementById('listSearch');
+  function renderList(filter){
+    var all = submissionsCache.slice();
+    var f = (filter || '').trim().toLowerCase();
+    if(f){
+      all = all.filter(function(s){
+        return (s.plat||'').toLowerCase().indexOf(f) !== -1 || (s.nama||'').toLowerCase().indexOf(f) !== -1;
+      });
+    }
+    listTable.innerHTML = '';
+    listEmpty.style.display = all.length ? 'none' : 'block';
+    all.forEach(function(s){
+      var row = document.createElement('div');
+      row.className = 'list-row';
+      // Seluruh baris bisa diklik untuk membuka tiket (bukan cuma teks plat nopol),
+      // supaya staf tidak bingung kalau klik di bagian nama/model/waktu tidak ada
+      // reaksinya sama sekali.
+      row.tabIndex = 0;
+      row.setAttribute('role', 'button');
+      row.addEventListener('click', function(){ openTicketFromList(s.id); });
+      row.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openTicketFromList(s.id); }
+      });
+
+      var nomor = document.createElement('span'); nomor.className = 'lr-nomor'; nomor.textContent = 'No. ' + s.nomor;
+
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'plat-link'; btn.textContent = s.plat;
+      btn.addEventListener('click', function(e){ e.stopPropagation(); openTicketFromList(s.id); });
+
+      var nama = document.createElement('span'); nama.className = 'lr-nama'; nama.textContent = s.nama;
+      var model = document.createElement('span'); model.className = 'lr-model'; model.textContent = s.model;
+      var time = document.createElement('span'); time.className = 'lr-time'; time.textContent = s.dateLabel + ' · ' + s.time;
+
+      row.appendChild(nomor); row.appendChild(btn); row.appendChild(nama); row.appendChild(model); row.appendChild(time);
+      listTable.appendChild(row);
+    });
+  }
+  listSearch.addEventListener('input', function(){ renderList(listSearch.value); });
+  function openTicketFromList(id){
+    var rec = submissionsCache.filter(function(s){ return s.id === id; })[0];
+    if(rec) showTicket(rec, 'list');
+  }
+
+  /* ---------- view / nav switching ---------- */
+  var navBtns = Array.prototype.slice.call(document.querySelectorAll('.nav-btn'));
+  function setActiveNav(view){
+    navBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-view') === view); });
+  }
+  function showSection(name){
+    document.getElementById('formView').hidden = name !== 'form';
+    document.getElementById('ticketView').hidden = name !== 'ticket';
+    document.getElementById('listView').hidden = name !== 'list';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  navBtns.forEach(function(b){
+    b.addEventListener('click', function(){
+      var v = b.getAttribute('data-view');
+      if(v === 'list'){ renderList(listSearch.value); refreshSubmissions(); }
+      setActiveNav(v);
+      showSection(v);
+    });
+  });
+
+  /* ---------- validation + submit ---------- */
+  function setInvalid(id, invalid){
+    var el = document.getElementById(id);
+    el.classList.toggle('invalid', invalid);
+  }
+  function val(id){ return document.getElementById(id).value.trim(); }
+
+  document.getElementById('plat').addEventListener('input', function(e){ e.target.value = e.target.value.toUpperCase(); });
+
+  function downscaleImage(dataUrl, maxDim, quality){
+    return new Promise(function(resolve){
+      var img = new Image();
+      img.onload = function(){
+        var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+        var scale = Math.min(1, maxDim / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+        var c = document.createElement('canvas'); c.width = cw; c.height = ch;
+        c.getContext('2d').drawImage(img, 0, 0, cw, ch);
+        resolve(c.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = function(){ resolve(dataUrl); };
+      img.src = dataUrl;
+    });
+  }
+
+  // Tanda tangan digambar dengan warna tinta mengikuti tema aplikasi (gelap di
+  // tema terang, terang di tema gelap) supaya tetap terlihat jelas SAAT digambar
+  // di kanvas. Tapi tiket/gambar WhatsApp/cetakan selalu menaruhnya di atas kotak
+  // putih — kalau warnanya ikut terang (dari tema gelap), jadi nyaris tak
+  // terlihat di sana. Fungsi ini menyeragamkan warna tinta yang DISIMPAN
+  // (bukan yang tampil saat menggambar) jadi satu warna gelap yang pasti
+  // kontras di atas latar putih, apa pun tema yang dipakai saat menandatangani.
+  function normalizedSignatureDataUrl(srcCanvas, inkHex){
+    var w = srcCanvas.width, h = srcCanvas.height;
+    if(!w || !h) return srcCanvas.toDataURL('image/png');
+    var tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
+    var tctx = tmp.getContext('2d');
+    tctx.drawImage(srcCanvas, 0, 0);
+    var r = parseInt(inkHex.slice(1,3),16), g = parseInt(inkHex.slice(3,5),16), b = parseInt(inkHex.slice(5,7),16);
+    var imgData = tctx.getImageData(0, 0, w, h);
+    var d = imgData.data;
+    for(var i = 0; i < d.length; i += 4){
+      if(d[i+3] > 0){ d[i] = r; d[i+1] = g; d[i+2] = b; }
+    }
+    tctx.putImageData(imgData, 0, 0);
+    return tmp.toDataURL('image/png');
+  }
+  var SIG_STORED_INK = '#1B2430';
+
+  function makeId(){ return Date.now() + '-' + Math.random().toString(36).slice(2,8); }
+
+  function normalizePhone(hp){
+    var digits = (hp || '').replace(/\D/g, '');
+    if(digits.indexOf('62') === 0) return digits;
+    if(digits.indexOf('0') === 0) return '62' + digits.slice(1);
+    if(digits.indexOf('8') === 0) return '62' + digits;
+    return digits;
+  }
+
+  function buildWaMessage(r){
+    var lines = [];
+    lines.push('Halo ' + (r.sapaan || 'Bp') + ' ' + r.nama + ',');
+    lines.push('Kunci kendaraan Anda (Plat ' + r.plat + ' — ' + r.model + ') sudah kami terima di ' + CONFIG.NAMA_TOKO + '.');
+    lines.push('Nomor antrian: ' + r.nomor);
+    if(r.noItems || !r.items || r.items.length === 0){
+      lines.push('Barang berharga dititipkan: tidak ada.');
+    } else {
+      lines.push('Barang berharga dititipkan: ' + r.items.join(', ') + '.');
+    }
+    lines.push('Mohon simpan nomor antrian ini untuk pengambilan kendaraan. Terima kasih.');
+    return lines.join('\n');
+  }
+
+  /* ---------- gambar tiket (untuk dikirim ke WhatsApp) ---------- */
+  function roundRectPath(ctx, x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function wrapCenterText(ctx, text, cx, y, maxWidth, lineHeight){
+    var words = text.split(' '), line = '', lines = [];
+    for(var n = 0; n < words.length; n++){
+      var test = line + words[n] + ' ';
+      if(ctx.measureText(test).width > maxWidth && n > 0){ lines.push(line); line = words[n] + ' '; }
+      else { line = test; }
+    }
+    lines.push(line);
+    lines.forEach(function(l, i){ ctx.fillText(l.trim(), cx, y + i * lineHeight); });
+    return y + lines.length * lineHeight;
+  }
+  function countWrappedLines(ctx, text, maxWidth){
+    var words = text.split(' '), line = '', lines = 0;
+    for(var n = 0; n < words.length; n++){
+      var test = line + words[n] + ' ';
+      if(ctx.measureText(test).width > maxWidth && n > 0){ lines++; line = words[n] + ' '; }
+      else { line = test; }
+    }
+    return lines + 1;
+  }
+  function loadImage(src){
+    return new Promise(function(resolve){
+      if(!src){ resolve(null); return; }
+      var img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = function(){ resolve(null); };
+      img.src = src;
+    });
+  }
+
+  var CONSENT_STATEMENT = 'Saya yang bertanda tangan di form ini menyatakan bahwa saya sudah menyerahkan kendaraan (Mobil) ke Perintis Perkasa Adam Malik Medan dengan kondisi seperti di atas.';
+  var CONSENT_NOTE = 'Catatan: kondisi kendaraan saat saya serahkan ke Perintis Perkasa Adam Malik belum dilakukan Walk Around Check (WAC) oleh SA.';
+  // Versi ringkas Syarat & Ketentuan, khusus untuk gambar tiket WhatsApp supaya
+  // ukuran gambarnya tidak membengkak — teks lengkap (poin 1-3) tetap ada di
+  // tampilan layar & cetak tiket (lihat blok .ticket-terms di HTML).
+  var TERMS_SUMMARY = 'Dengan tanda tangan di atas, Pemilik/Pembawa menyetujui Syarat & Ketentuan penggunaan data pribadi oleh PT. Perintis Perkasa sesuai peraturan perundang-undangan yang berlaku. Syarat lengkap tersedia di tiket cetak/layar.';
+
+  function buildTicketImage(r){
+    var itemsList = (r.noItems || !r.items || r.items.length === 0) ? ['Tidak ada barang berharga dititipkan'] : r.items;
+    return Promise.all([
+      (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()),
+      loadImage(r.sig),
+      loadImage(r.sigPenerima)
+    ]).then(function(res){
+      var sigImg = res[1];
+      var sigPenerimaImg = res[2];
+      var W = 640;
+      var cardX = 24, cardY = 24, cardW = W - 48;
+      var textMaxWidth = cardW - 48;
+
+      // ukur dulu berapa baris teks pernyataan supaya tinggi kanvas pas (tidak ada ruang kosong)
+      var mCanvas = document.createElement('canvas');
+      var mg = mCanvas.getContext('2d');
+      mg.font = '13px "IBM Plex Sans", sans-serif';
+      var consentLines = countWrappedLines(mg, CONSENT_STATEMENT, textMaxWidth);
+      mg.font = 'italic 11.5px "IBM Plex Sans", sans-serif';
+      var noteLines = countWrappedLines(mg, CONSENT_NOTE, textMaxWidth);
+      mg.font = 'italic 10.5px "IBM Plex Sans", sans-serif';
+      var termsLines = countWrappedLines(mg, TERMS_SUMMARY, textMaxWidth);
+
+      var SIG_BLOCK_H = 166; // tinggi satu blok tanda tangan (label + kotak + nama + jarak)
+      var ROW_H = 44; // tinggi satu baris data (label + garis putus-putus)
+      var H = 832 + SIG_BLOCK_H + ROW_H + itemsList.length * 24 + consentLines * 17 + noteLines * 15 + 36 + termsLines * 14;
+      var c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      var g = c.getContext('2d');
+      var COL = { paper:'#EAEFEA', surface:'#FFFFFF', ink:'#1B2430', soft:'#4E5B63', accent:'#B8622E', line:'#D2DAD3' };
+
+      g.fillStyle = COL.paper; g.fillRect(0, 0, W, H);
+      var cardH = H - 48;
+      roundRectPath(g, cardX, cardY, cardW, cardH, 18);
+      g.fillStyle = COL.surface; g.fill();
+
+      var cx = W / 2, y = cardY + 46;
+      g.textAlign = 'center';
+      g.fillStyle = COL.soft;
+      g.font = '600 13px "IBM Plex Sans", sans-serif';
+      g.fillText(((CONFIG.NAMA_TOKO || 'Key Drop Service') + ' — Key Drop Service').toUpperCase(), cx, y);
+
+      y += 34;
+      g.fillStyle = COL.ink;
+      g.font = '600 26px "Oswald", sans-serif';
+      g.fillText('Tiket Titip Kunci', cx, y);
+
+      y += 32;
+      g.fillStyle = COL.soft;
+      g.font = '11px "IBM Plex Mono", monospace';
+      g.fillText('NOMOR ANTRIAN', cx, y);
+
+      y += 58;
+      g.fillStyle = COL.accent;
+      g.font = '700 66px "Oswald", sans-serif';
+      g.fillText(r.nomor, cx, y);
+
+      y += 26;
+      g.fillStyle = COL.soft;
+      g.font = '13px "IBM Plex Mono", monospace';
+      g.fillText(r.dateLabel + ' · ' + r.time, cx, y);
+
+      y += 26;
+      function divider(){
+        g.strokeStyle = COL.line; g.lineWidth = 2; g.setLineDash([6, 6]);
+        g.beginPath(); g.moveTo(cardX + 16, y); g.lineTo(cardX + cardW - 16, y); g.stroke(); g.setLineDash([]);
+      }
+      divider();
+
+      y += 38;
+      function row(label, value){
+        g.textAlign = 'left';
+        g.fillStyle = COL.soft; g.font = '13px "IBM Plex Sans", sans-serif';
+        g.fillText(label, cardX + 24, y);
+        g.textAlign = 'right';
+        g.fillStyle = COL.ink; g.font = '600 15px "IBM Plex Sans", sans-serif';
+        g.fillText(value, cardX + cardW - 24, y);
+        y += 22;
+        g.strokeStyle = COL.line; g.setLineDash([4, 4]);
+        g.beginPath(); g.moveTo(cardX + 24, y); g.lineTo(cardX + cardW - 24, y); g.stroke(); g.setLineDash([]);
+        y += 22;
+      }
+      row('Plat Nopol', r.plat);
+      row('Model Kendaraan', r.model);
+      row('Nama Customer', r.nama);
+      row('No HP', r.hp);
+
+      g.textAlign = 'left';
+      g.fillStyle = COL.soft; g.font = '13px "IBM Plex Sans", sans-serif';
+      g.fillText('Barang Berharga', cardX + 24, y);
+      y += 24;
+      g.fillStyle = COL.ink; g.font = '13px "IBM Plex Sans", sans-serif';
+      itemsList.forEach(function(it){ g.fillText('•  ' + it, cardX + 32, y); y += 24; });
+
+      y += 14;
+      divider();
+
+      // tanda tangan customer
+      y += 30;
+      g.textAlign = 'center';
+      g.fillStyle = COL.soft; g.font = '11px "IBM Plex Mono", monospace';
+      g.fillText('TANDA TANGAN CUSTOMER', cx, y);
+      y += 14;
+      var boxW = 220, boxH = 78;
+      var boxX = cx - boxW / 2, boxY = y;
+      roundRectPath(g, boxX, boxY, boxW, boxH, 8);
+      g.fillStyle = '#FFFFFF'; g.fill();
+      g.strokeStyle = COL.line; g.lineWidth = 1; g.stroke();
+      if(sigImg && sigImg.width && sigImg.height){
+        var scale = Math.min((boxW - 16) / sigImg.width, (boxH - 16) / sigImg.height);
+        var dw = sigImg.width * scale, dh = sigImg.height * scale;
+        g.drawImage(sigImg, boxX + (boxW - dw) / 2, boxY + (boxH - dh) / 2, dw, dh);
+      }
+      y = boxY + boxH + 20;
+      g.fillStyle = COL.ink; g.font = '600 13px "IBM Plex Sans", sans-serif';
+      g.fillText(r.nama || '', cx, y);
+
+      y += 24;
+      divider();
+
+      // tanda tangan petugas penerima
+      y += 30;
+      g.textAlign = 'center';
+      g.fillStyle = COL.soft; g.font = '11px "IBM Plex Mono", monospace';
+      g.fillText('TANDA TANGAN PENERIMA', cx, y);
+      y += 14;
+      boxX = cx - boxW / 2; boxY = y;
+      roundRectPath(g, boxX, boxY, boxW, boxH, 8);
+      g.fillStyle = '#FFFFFF'; g.fill();
+      g.strokeStyle = COL.line; g.lineWidth = 1; g.stroke();
+      if(sigPenerimaImg && sigPenerimaImg.width && sigPenerimaImg.height){
+        var scale2 = Math.min((boxW - 16) / sigPenerimaImg.width, (boxH - 16) / sigPenerimaImg.height);
+        var dw2 = sigPenerimaImg.width * scale2, dh2 = sigPenerimaImg.height * scale2;
+        g.drawImage(sigPenerimaImg, boxX + (boxW - dw2) / 2, boxY + (boxH - dh2) / 2, dw2, dh2);
+      }
+      y = boxY + boxH + 20;
+      g.fillStyle = COL.ink; g.font = '600 13px "IBM Plex Sans", sans-serif';
+      g.fillText('Petugas Perintis Perkasa', cx, y);
+
+      y += 24;
+      divider();
+
+      // pernyataan customer
+      y += 26;
+      g.textAlign = 'center';
+      g.fillStyle = COL.ink; g.font = '13px "IBM Plex Sans", sans-serif';
+      y = wrapCenterText(g, CONSENT_STATEMENT, cx, y, textMaxWidth, 17);
+
+      y += 8;
+      g.fillStyle = COL.soft; g.font = 'italic 11.5px "IBM Plex Sans", sans-serif';
+      y = wrapCenterText(g, CONSENT_NOTE, cx, y, textMaxWidth, 15);
+
+      y += 14;
+      divider();
+
+      // ringkasan syarat & ketentuan (versi lengkap ada di tiket layar/cetak)
+      y += 22;
+      g.textAlign = 'center';
+      g.fillStyle = COL.soft; g.font = 'italic 10.5px "IBM Plex Sans", sans-serif';
+      y = wrapCenterText(g, TERMS_SUMMARY, cx, y, textMaxWidth, 14);
+
+      y += 12;
+      g.fillStyle = COL.soft; g.font = 'italic 12px "IBM Plex Sans", sans-serif';
+      wrapCenterText(g, 'Mohon simpan nomor antrian ini untuk pengambilan kendaraan.', cx, y, cardW - 60, 17);
+
+      return new Promise(function(resolve){
+        c.toBlob(function(blob){ resolve({ blob: blob, dataUrl: c.toDataURL('image/png') }); }, 'image/png');
+      });
+    });
+  }
+
+  function safeFileName(s){ return String(s || '').replace(/[^a-zA-Z0-9]/g, '') || 'tiket'; }
+
+  // Link foto KTP dari Google Drive (format thumbnail) tidak bisa langsung
+  // dipaksa unduh lewat atribut "download" karena beda domain — jadi diarahkan
+  // ke link unduh langsung Drive-nya. Kalau fotonya masih berupa data URL
+  // (baru saja disimpan, belum sempat dimuat ulang dari server), unduh biasa
+  // lewat atribut "download" saja sudah cukup.
+  function driveIdFromUrl(url){
+    var m = String(url||'').match(/[?&]id=([a-zA-Z0-9_-]+)/) || String(url||'').match(/\/d\/([a-zA-Z0-9_-]+)/);
+    return m && m[1];
+  }
+  function ktpDownloadHref(ktp){
+    if(!ktp) return '#';
+    if(ktp.indexOf('data:') === 0) return ktp;
+    var id = driveIdFromUrl(ktp);
+    return id ? ('https://drive.google.com/uc?export=download&id=' + id) : ktp;
+  }
+
+  function fallbackDownloadAndWa(img, filename, r, reservedWindow){
+    var a = document.createElement('a');
+    a.href = img.dataUrl; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    var waUrl = waChatUrl(r);
+    if(reservedWindow){ reservedWindow.location.href = waUrl; } else { window.open(waUrl, '_blank'); }
+    return { ok: true, method: 'fallback' };
+  }
+
+  function shareTicketImage(r, reservedWindow){
+    return buildTicketImage(r).then(function(img){
+      var filename = 'tiket-' + r.nomor + '-' + safeFileName(r.plat) + '.png';
+      var file = null;
+      try { file = new File([img.blob], filename, { type: 'image/png' }); } catch (e) {}
+      if(file && window.navigator && navigator.canShare && navigator.canShare({ files: [file] })){
+        return navigator.share({ files: [file], text: buildWaMessage(r), title: 'Tiket Titip Kunci' })
+          .then(function(){
+            if(reservedWindow) reservedWindow.close();
+            return { ok: true, method: 'share' };
+          })
+          .catch(function(err){
+            if(err && err.name === 'AbortError'){
+              if(reservedWindow) reservedWindow.close();
+              return { ok: true, method: 'cancelled' };
+            }
+            return fallbackDownloadAndWa(img, filename, r, reservedWindow);
+          });
+      }
+      return fallbackDownloadAndWa(img, filename, r, reservedWindow);
+    });
+  }
+
+  var waShareBtn = document.getElementById('waShareBtn');
+  var waOpenChatBtn = document.getElementById('waOpenChatBtn');
+  var waShareStatus = document.getElementById('waShareStatus');
+  var waShareDefaultLabel = waShareBtn.textContent;
+  var copyHpBtn = document.getElementById('copyHpBtn');
+
+  function waChatUrl(r){
+    return 'https://wa.me/' + normalizePhone(r.hp) + '?text=' + encodeURIComponent(buildWaMessage(r));
+  }
+
+  function canUseFileShare(){
+    if(!(window.navigator && navigator.share && navigator.canShare)) return false;
+    try {
+      var probe = new File([new Blob(['x'], { type: 'image/png' })], 'probe.png', { type: 'image/png' });
+      return !!navigator.canShare({ files: [probe] });
+    } catch(e){ return false; }
+  }
+
+  // Daftar kontak yang disarankan di lembar share bawaan HP (yang muncul di
+  // atas WhatsApp) itu murni dibuat oleh sistem HP itu sendiri dari riwayat
+  // kontak/chat — tidak ada cara bagi halaman web untuk mengarahkannya ke
+  // nomor tertentu. Supaya staf tetap tidak perlu mengetik ulang nomor kalau
+  // harus mencari kontaknya sendiri di WhatsApp, nomor HP customer otomatis
+  // disalin ke clipboard di sini, plus tersedia tombol salin manual terpisah.
+  function copyToClipboard(text){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(text).catch(function(){ return legacyCopy(text); });
+    }
+    return legacyCopy(text);
+  }
+  function legacyCopy(text){
+    return new Promise(function(resolve){
+      try{
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        resolve(ok);
+      }catch(e){ resolve(false); }
+    });
+  }
+
+  copyHpBtn.addEventListener('click', function(){
+    if(!currentTicketRecord) return;
+    var num = normalizePhone(currentTicketRecord.hp);
+    copyToClipboard(num).then(function(ok){
+      waShareStatus.textContent = ok !== false
+        ? 'Nomor HP customer: ' + num + ' — sudah dicoba disalin, tinggal tempel di kolom pencarian WhatsApp. Kalau tidak muncul saat ditempel, ketik manual saja nomor di atas. Atau, lebih gampang, pakai tombol "💬 Buka Chat WhatsApp" di atas — chat-nya langsung terbuka tanpa perlu menempel nomor sama sekali.'
+        : 'Gagal menyalin otomatis. Nomor HP customer: ' + num + ' — ketik manual saja di kolom pencarian WhatsApp, atau pakai tombol "💬 Buka Chat WhatsApp" di atas supaya tidak perlu mengetik nomor sama sekali.';
+    });
+  });
+
+  // Tombol ini SELALU langsung membuka chat WhatsApp customer yang benar
+  // (lewat link wa.me, tanpa perlu menyalin/menempel nomor apa pun) — supaya
+  // staf punya satu tombol pasti berhasil untuk "masuk ke chat customer",
+  // terlepas dari berhasil-tidaknya proses berbagi gambar di tombol sebelah.
+  waOpenChatBtn.addEventListener('click', function(){
+    if(!currentTicketRecord) return;
+    // Reservasi tab kosong dulu (masih dalam gesture klik staf) supaya tidak
+    // diblokir oleh popup blocker browser.
+    var reservedWindow = window.open('', '_blank');
+    var url = waChatUrl(currentTicketRecord);
+    if(reservedWindow){ reservedWindow.location.href = url; } else { window.open(url, '_blank'); }
+    waShareStatus.textContent = 'Chat WhatsApp ' + (currentTicketRecord.nama || 'customer') + ' sudah dibuka di tab baru. Kalau gambar tiketnya belum ada di perangkat ini, tekan dulu "📤 Kirim Gambar ke WhatsApp" supaya ikut terunduh, lalu lampirkan lewat ikon 📎 di WhatsApp.';
+  });
+
+  waShareBtn.addEventListener('click', function(){
+    if(!currentTicketRecord) return;
+    // Tab kosong "cadangan" ini hanya untuk jalur fallback (unduh + buka WhatsApp
+    // teks di browser yang tidak mendukung share asli). Kalau tetap dibuka juga
+    // di HP yang mendukung share asli, tab baru ini menggeser fokus layar dan
+    // membuat lembar share bawaan HP langsung tertutup sendiri sebelum sempat
+    // dipakai — makanya di sini dicek dulu, dan hanya dibuka kalau memang perlu.
+    var reservedWindow = canUseFileShare() ? null : window.open('', '_blank');
+    var hpForCopy = normalizePhone(currentTicketRecord.hp);
+    // Disalin di awal, masih dalam gesture klik staf. Tapi berhasil-tidaknya
+    // penyalinan otomatis ini tidak selalu bisa dideteksi dengan pasti (di
+    // sebagian browser/HP promise-nya tetap "berhasil" walau sebenarnya
+    // clipboard-nya diblokir) — jadi nomornya SELALU ditampilkan juga sebagai
+    // teks biasa di pesan status, supaya staf tetap bisa baca & ketik manual
+    // kalau ternyata paste-nya tidak muncul apa-apa.
+    copyToClipboard(hpForCopy);
+    waShareBtn.disabled = true; waShareBtn.textContent = 'Menyiapkan…';
+    waShareStatus.textContent = '';
+    shareTicketImage(currentTicketRecord, reservedWindow).then(function(res){
+      waShareBtn.disabled = false; waShareBtn.textContent = waShareDefaultLabel;
+      if(res.method === 'share'){
+        waShareStatus.textContent = 'Gambar tiket dibagikan. Nomor HP customer: ' + hpForCopy + ' — sudah dicoba disalin ke clipboard (tinggal tempel di pencarian WhatsApp), kalau ternyata tidak muncul saat ditempel, ketik manual saja nomor di atas.';
+      } else if(res.method === 'fallback'){
+        waShareStatus.innerHTML = 'Gambar tiket sudah diunduh, dan WhatsApp sudah dibuka ke chat ' + (currentTicketRecord.nama || 'customer') + '. Langkah terakhir tinggal 2 klik lagi di WhatsApp: tekan ikon 📎 lampiran → pilih gambar tiket yang baru diunduh (nama file diawali "tiket-") → kirim.<br>Kalau tab WhatsApp-nya tidak muncul/ke-block, pakai tombol "💬 Buka Chat WhatsApp" di atas.';
+      } else {
+        waShareStatus.textContent = '';
+      }
+    }).catch(function(){
+      waShareBtn.disabled = false; waShareBtn.textContent = waShareDefaultLabel;
+      if(reservedWindow) reservedWindow.close();
+      waShareStatus.textContent = 'Gagal menyiapkan gambar tiket, silakan coba lagi.';
+    });
+  });
+
+  var submitBtn = document.getElementById('submitBtn');
+  var submitDefaultLabel = submitBtn.textContent;
+
+  submitBtn.addEventListener('click', function(){
+    var plat = val('plat'), model = val('model'), nama = val('nama'), hp = val('hp');
+    var ok = true;
+
+    setInvalid('f-plat', !plat); if(!plat) ok = false;
+    setInvalid('f-model', !model); if(!model) ok = false;
+    setInvalid('f-nama', !nama); if(!nama) ok = false;
+    setInvalid('f-hp', !hp); if(!hp) ok = false;
+
+    var sigBad = sigCustomer.isEmpty();
+    setInvalid('f-sig', sigBad); if(sigBad) ok = false;
+
+    var sig2Bad = sigStaff.isEmpty();
+    setInvalid('f-sig2', sig2Bad); if(sig2Bad) ok = false;
+
+    var ktpBad = !ktpDataUrl;
+    setInvalid('f-ktp', ktpBad); if(ktpBad) ok = false;
+
+    if(!ok){
+      var firstInvalid = document.querySelector('.invalid');
+      if(firstInvalid) firstInvalid.scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+
+    var nomor = (antrianInput.value.trim() || pad(countTodayFromCache() + 1, 3)).toUpperCase();
+    var now = new Date();
+    var timeLabel = pad(now.getHours(),2)+':'+pad(now.getMinutes(),2);
+
+    submitBtn.disabled = true; submitBtn.textContent = 'Menyimpan…';
+    showGlobalError('');
+
+    downscaleImage(ktpDataUrl, 1100, 0.72).then(function(ktpSmall){
+      var record = {
+        id: makeId(),
+        nomor: nomor,
+        dateKey: todayKey(),
+        dateLabel: todayLabel(),
+        time: timeLabel,
+        plat: plat, model: model, nama: nama, hp: hp,
+        sapaan: sapaanValue,
+        items: allItems(),
+        noItems: noItems.checked,
+        sig: sigCustomer.dataUrl(SIG_STORED_INK),
+        sigPenerima: sigStaff.dataUrl(SIG_STORED_INK),
+        ktp: ktpSmall
+      };
+      var approxSize = plat.length + model.length + nama.length + hp.length + record.sig.length + record.sigPenerima.length + record.ktp.length;
+      if(approxSize > 900000){
+        submitBtn.disabled = false; submitBtn.textContent = submitDefaultLabel;
+        showGlobalError('Ukuran foto terlalu besar untuk disimpan. Coba ambil ulang foto KTP.');
+        return;
+      }
+
+      fetch(CONFIG.WEBAPP_URL, { method:'POST', body: JSON.stringify(Object.assign({}, record, { code: accessCode })) })
+        .then(function(res){ return res.json(); })
+        .then(function(res){
+          submitBtn.disabled = false; submitBtn.textContent = submitDefaultLabel;
+          if(!res || !res.ok){
+            showGlobalError((res && res.message) || 'Gagal menyimpan ke server.');
+            return;
+          }
+          refreshSubmissions();
+          showTicket(record, 'new');
+        })
+        .catch(function(err){
+          submitBtn.disabled = false; submitBtn.textContent = submitDefaultLabel;
+          showGlobalError('Gagal menyimpan ke server: ' + err.message);
+        });
+    });
+  });
+
+  var ticketBackBtn = document.getElementById('ticketBackBtn');
+  var ticketMode = 'new';
+  var currentTicketRecord = null;
+
+  function showTicket(r, mode){
+    ticketMode = mode || 'new';
+    currentTicketRecord = r;
+    waShareStatus.textContent = '';
+    document.getElementById('rNomor').textContent = r.nomor;
+    document.getElementById('rTanggal').textContent = r.dateLabel + ' · ' + r.time;
+    document.getElementById('rPlat').textContent = r.plat;
+    document.getElementById('rModel').textContent = r.model;
+    document.getElementById('rNama').textContent = r.nama;
+    document.getElementById('rHp').textContent = r.hp;
+    var ul = document.getElementById('rBarang');
+    ul.innerHTML = '';
+    if(r.noItems || r.items.length === 0){
+      var li = document.createElement('li'); li.textContent = 'Tidak ada barang berharga dititipkan';
+      ul.appendChild(li);
+    } else {
+      r.items.forEach(function(it){ var li = document.createElement('li'); li.textContent = it; ul.appendChild(li); });
+    }
+    document.getElementById('rSig').src = r.sig;
+    document.getElementById('rSigName').textContent = r.nama || '';
+    document.getElementById('rSigPenerima').src = r.sigPenerima || '';
+    document.getElementById('rKtp').src = r.ktp;
+    var ktpDlLink = document.getElementById('ktpDownloadLink');
+    ktpDlLink.href = ktpDownloadHref(r.ktp);
+    if(r.ktp && r.ktp.indexOf('data:') === 0){
+      ktpDlLink.setAttribute('download', 'ktp-' + safeFileName(r.plat) + '.jpg');
+    } else {
+      ktpDlLink.removeAttribute('download'); // link Drive lintas-domain: biarkan browser yang tangani unduhannya
+    }
+
+    ticketBackBtn.textContent = ticketMode === 'list' ? '← Kembali ke Daftar' : '+ Form Baru';
+    setActiveNav(ticketMode === 'list' ? 'list' : 'form');
+    showSection('ticket');
+  }
+
+  document.getElementById('printBtn').addEventListener('click', function(){ window.print(); });
+  ticketBackBtn.addEventListener('click', function(){
+    if(ticketMode === 'list'){
+      renderList(listSearch.value);
+      setActiveNav('list');
+      showSection('list');
+    } else {
+      resetForm();
+      setActiveNav('form');
+      showSection('form');
+    }
+  });
+
+  function resetForm(){
+    ['plat','model','nama','hp'].forEach(function(id){ document.getElementById(id).value=''; });
+    ['f-plat','f-model','f-nama','f-hp','f-sig','f-sig2','f-ktp'].forEach(function(id){ document.getElementById(id).classList.remove('invalid'); });
+    items = []; presetChecked = [];
+    noItems.checked = false; itemInput.disabled = false; itemAddBtn.disabled = false;
+    presetCheckboxes.forEach(function(cb){ cb.checked = false; cb.disabled = false; });
+    renderItems();
+    sapaanValue = 'Bp';
+    sapaanBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-value') === 'Bp'); });
+    sigCustomer.clear(); sigStaff.clear();
+    stopStream(); ktpDataUrl = null; ktpFileInput.value=''; showIdle();
+    antrianAuto = true; refreshQueueNumber();
+    showGlobalError('');
+  }
+  document.getElementById('resetBtn').addEventListener('click', resetForm);
+
+  /* ---------- gate akses (kode staf, diverifikasi oleh Apps Script) ---------- */
+  var bootScreen = document.getElementById('bootScreen');
+  var authView = document.getElementById('authView');
+  var appShell = document.getElementById('appShell');
+  var headerActions = document.getElementById('headerActions');
+  var userBadge = document.getElementById('userBadge');
+  var logoutBtn = document.getElementById('logoutBtn');
+  var authCode = document.getElementById('authCode');
+  var authSubmitBtn = document.getElementById('authSubmitBtn');
+  var authErrorEl = document.getElementById('authError');
+
+  function showAuthError(msg){
+    authErrorEl.textContent = msg; authErrorEl.classList.toggle('show', !!msg);
+  }
+
+  function enterApp(){
+    authView.hidden = true;
+    appShell.hidden = false;
+    headerActions.hidden = false;
+    userBadge.hidden = false;
+    logoutBtn.hidden = false;
+    setActiveNav('form'); showSection('form');
+    refreshSubmissions();
+    // Kanvas tanda tangan diukur ulang begitu form ini benar-benar terlihat
+    // (sebelum login, form tersembunyi sehingga ukurannya sempat 0 — tanpa ini
+    // tanda tangan yang digambar customer tidak pernah benar-benar tersimpan).
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ sigCustomer.resize(); sigStaff.resize(); }); });
+  }
+  function showGate(msg){
+    appShell.hidden = true;
+    headerActions.hidden = true;
+    userBadge.hidden = true;
+    logoutBtn.hidden = true;
+    authView.hidden = false;
+    if(msg) showAuthError(msg);
+  }
+
+  function doLogin(){
+    var code = authCode.value.trim();
+    if(!code){ showAuthError('Kode akses wajib diisi.'); return; }
+    if(!CONFIG.WEBAPP_URL || CONFIG.WEBAPP_URL.indexOf('GANTI_') === 0){
+      showAuthError('Aplikasi belum selesai disetel: Web App URL belum diisi di file HTML. Lihat panduan setup.');
+      return;
+    }
+    authSubmitBtn.disabled = true; authSubmitBtn.textContent = 'Memeriksa…';
+    showAuthError('');
+    accessCode = code;
+    fetchSubmissions().then(function(res){
+      authSubmitBtn.disabled = false; authSubmitBtn.textContent = 'Masuk';
+      if(res && res.ok){
+        try{ localStorage.setItem('keydrop_access_code', code); }catch(e){}
+        submissionsCache = res.data || [];
+        renderHistory(); renderList(''); refreshQueueNumber();
+        enterApp();
+      } else {
+        accessCode = '';
+        showAuthError((res && res.message) || 'Kode akses salah.');
+      }
+    });
+  }
+  authSubmitBtn.addEventListener('click', doLogin);
+  authCode.addEventListener('keydown', function(e){ if(e.key === 'Enter') doLogin(); });
+  logoutBtn.addEventListener('click', function(){
+    accessCode = '';
+    try{ localStorage.removeItem('keydrop_access_code'); }catch(e){}
+    authCode.value = '';
+    showGate('');
+  });
+
+  (function boot(){
+    var saved = '';
+    try{ saved = localStorage.getItem('keydrop_access_code') || ''; }catch(e){}
+    if(!CONFIG.WEBAPP_URL || CONFIG.WEBAPP_URL.indexOf('GANTI_') === 0){
+      bootScreen.hidden = true;
+      showGate('Aplikasi belum selesai disetel oleh admin: Web App URL Apps Script belum diisi di file HTML ini. Lihat panduan setup yang menyertai file ini.');
+      return;
+    }
+    if(!saved){
+      bootScreen.hidden = true;
+      showGate('');
+      return;
+    }
+    accessCode = saved;
+    fetchSubmissions().then(function(res){
+      bootScreen.hidden = true;
+      if(res && res.ok){
+        submissionsCache = res.data || [];
+        renderHistory(); renderList(''); refreshQueueNumber();
+        enterApp();
+      } else {
+        accessCode = '';
+        try{ localStorage.removeItem('keydrop_access_code'); }catch(e){}
+        showGate('Sesi berakhir, silakan masuk lagi.');
+      }
+    });
+  })();
+
+})();
+</script>
