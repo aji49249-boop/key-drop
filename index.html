@@ -1507,11 +1507,52 @@
     }
   }
 
+  // Menampilkan gambar tiket LANGSUNG di halaman (bukan cuma memicu unduhan
+  // diam-diam) supaya staf bisa tekan-dan-tahan gambarnya untuk menyimpan —
+  // ini cara yang PASTI berhasil di semua browser HP, termasuk Safari di
+  // iPhone/iPad yang TIDAK mendukung atribut "download" pada tautan sama
+  // sekali (kalau dipaksa, Safari cuma menampilkan/menavigasi ke data URL-nya
+  // tanpa benar-benar menyimpan filenya — persis penyebab laporan "gambar
+  // tiket tidak ikut terkirim" di iPhone). Tombol WA di halaman ini SENGAJA
+  // tidak diklik otomatis (beda dari navigateReservedWindow), supaya staf
+  // sempat menyimpan gambarnya dulu sebelum lanjut ke WhatsApp.
+  function showFallbackImageAndWa(reservedWindow, img, r){
+    if(!reservedWindow){ reservedWindow = window.open('', '_blank'); }
+    if(!reservedWindow) return;
+    var url = waChatUrl(r);
+    var safeUrl = String(url).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    var safeNama = String(r.nama || 'customer').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    try {
+      reservedWindow.document.open();
+      reservedWindow.document.write(
+        '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
+        '<title>Simpan gambar tiket</title></head>' +
+        '<body style="font-family:sans-serif;text-align:center;padding:24px 18px 40px;color:#1B2430;background:#EAEFEA;margin:0;">' +
+        '<p style="font-size:15px;font-weight:600;margin:0 0 4px;">Langkah 1: simpan gambar tiket ini</p>' +
+        '<p style="font-size:13px;color:#4E5B63;margin:0 0 16px;">Tekan &amp; tahan gambar di bawah ini, lalu pilih <b>&quot;Tambahkan ke Foto&quot;</b> / <b>&quot;Simpan Gambar&quot;</b> (iPhone/iPad) atau <b>&quot;Download image&quot;</b> (Android).</p>' +
+        '<img src="' + img.dataUrl + '" alt="Tiket Titip Kunci" style="max-width:100%;width:340px;border-radius:10px;border:1px solid #D2DAD3;box-shadow:0 2px 10px rgba(0,0,0,.1);" />' +
+        '<p style="font-size:15px;font-weight:600;margin:28px 0 4px;">Langkah 2: lanjut ke chat WhatsApp ' + safeNama + '</p>' +
+        '<p style="font-size:13px;color:#4E5B63;margin:0 0 14px;">Setelah gambarnya tersimpan, tekan tombol di bawah untuk membuka chat, lalu lampirkan gambarnya lewat ikon 📎 di WhatsApp.</p>' +
+        '<p style="margin:0;"><a id="waAutoLink" href="' + safeUrl + '" style="display:inline-block;background:#2FA84F;color:#fff;text-decoration:none;font-weight:600;padding:14px 26px;border-radius:10px;font-size:15px;">💬 Buka Chat WhatsApp</a></p>' +
+        '</body></html>'
+      );
+      reservedWindow.document.close();
+    } catch(e){
+      try { reservedWindow.location.href = url; } catch(e2){}
+    }
+  }
+
   function fallbackDownloadAndWa(img, filename, r, reservedWindow){
-    var a = document.createElement('a');
-    a.href = img.dataUrl; a.download = filename;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    navigateReservedWindow(reservedWindow, waChatUrl(r), r.nama);
+    // Tetap dicoba juga sebagai bonus (berhasil unduh otomatis ke folder
+    // Downloads di sebagian besar browser desktop & Android Chrome), tapi
+    // TIDAK diandalkan sendirian — lihat showFallbackImageAndWa() di atas
+    // untuk cara yang dijamin berhasil di semua perangkat.
+    try {
+      var a = document.createElement('a');
+      a.href = img.dataUrl; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    } catch(e){}
+    showFallbackImageAndWa(reservedWindow, img, r);
     return { ok: true, method: 'fallback' };
   }
 
@@ -1628,7 +1669,7 @@
       if(res.method === 'share'){
         waShareStatus.textContent = 'Gambar tiket dibagikan. Nomor HP customer: ' + hpForCopy + ' — sudah dicoba disalin ke clipboard (tinggal tempel di pencarian WhatsApp), kalau ternyata tidak muncul saat ditempel, ketik manual saja nomor di atas.';
       } else if(res.method === 'fallback'){
-        waShareStatus.innerHTML = 'Gambar tiket sudah diunduh, dan WhatsApp sudah dibuka ke chat ' + (currentTicketRecord.nama || 'customer') + '. Langkah terakhir tinggal 2 klik lagi di WhatsApp: tekan ikon 📎 lampiran → pilih gambar tiket yang baru diunduh (nama file diawali "tiket-") → kirim.<br>Kalau tab WhatsApp-nya tidak muncul/ke-block, pakai tombol "💬 Buka Chat WhatsApp" di atas.';
+        waShareStatus.innerHTML = 'Tab baru sudah dibuka berisi gambar tiket ' + (currentTicketRecord.nama || 'customer') + ' — ikuti 2 langkah di tab itu: (1) tekan &amp; tahan gambarnya untuk menyimpan ke perangkat, lalu (2) tekan tombol hijau untuk lanjut ke chat WhatsApp dan lampirkan gambarnya lewat ikon 📎.<br>Kalau tab barunya tidak muncul/ke-block, pakai tombol "💬 Buka Chat WhatsApp" di atas.';
       } else {
         waShareStatus.textContent = '';
       }
