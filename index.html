@@ -413,40 +413,44 @@
     .ticket-actions, #waShareStatus{ display:none !important; }
     .ktp-download-btn{ display:none !important; }
 
-    /* Ukuran di bawah ini sengaja dibuat LEGA (bukan diperkecil habis-habisan)
-       supaya satu tiket memenuhi satu lembar kertas HVS (A4/F4) dengan pas —
-       tidak menyisakan banyak area kosong seperti sebelumnya. Untuk kasus
-       langka isinya kebetulan lebih panjang dari satu halaman (misalnya
-       daftar barang berharga sangat banyak), skrip di bawah akan mengecilkan
-       (scale) seluruh tiket secukupnya supaya tetap satu lembar; untuk tiket
-       normal, skrip itu tidak melakukan apa-apa dan ukuran di bawah ini yang
-       dipakai apa adanya. */
+    /* Ukuran di bawah ini dihitung supaya CSS SENDIRI (tanpa bantuan skrip
+       apa pun) sudah muat rapi dalam satu lembar kertas HVS (A4/F4) potret,
+       bahkan untuk kasus daftar barang berharga yang panjang (sampai ±15
+       baris). Ini sengaja tidak lagi mengandalkan skrip "scale to fit" di
+       bawah (fitTicketToPage) sebagai satu-satunya cara — beberapa dialog
+       cetak nyata (terutama lewat driver printer fisik, bukan "Simpan
+       sebagai PDF") ternyata tidak selalu menerapkan perubahan ukuran yang
+       dibuat lewat skrip saat event beforeprint, jadi hasil akhirnya harus
+       tetap benar walau skrip itu tidak sempat jalan. Skrip di bawah tetap
+       dibiarkan aktif sebagai bonus (membesarkan tiket yang isinya sedikit
+       supaya mengisi kertas lebih penuh), tapi tidak lagi jadi syarat utama
+       supaya tiket muat satu halaman. */
     #ticketView .ticket-card{
       box-shadow:none; border:1px solid #999; width:100%; max-width:710px; margin:0 auto;
-      padding:18px 24px 20px; transform-origin:top center;
+      padding:14px 20px 16px; transform-origin:top center;
     }
-    .ticket-card .receipt-head{ margin-bottom:5px; }
-    .ticket-card .receipt-head .co{ font-size:11px; }
-    .ticket-card .receipt-head h2{ font-size:19px; margin-top:2px; }
-    .ticket-card .stub{ margin:7px 0 3px !important; }
-    .ticket-card .stub .eyebrow{ font-size:10.5px; }
-    .ticket-card .stub-number{ font-size:44px !important; margin:4px 0 2px !important; }
-    .ticket-card .stub .stub-date{ font-size:11.5px; }
-    .ticket-card .stub-divider{ margin:12px -24px !important; }
-    .ticket-card .receipt-row{ padding:6px 0; font-size:12px; }
-    .ticket-card .receipt-list{ font-size:12px; margin-top:4px; padding-left:17px; }
-    .ticket-card .receipt-list li{ margin-bottom:2px; }
-    .ticket-card .ticket-terms{ margin-top:11px; padding-top:10px; font-size:9.5px; line-height:1.42; }
-    .ticket-card .ticket-terms .tt-title{ font-size:10px; margin-bottom:6px; }
-    .ticket-card .terms-list, .ticket-card .terms-sublist{ padding-left:16px; }
-    .ticket-card .terms-list > li{ margin-bottom:4px; }
-    .ticket-card .receipt-media{ margin-top:11px; gap:10px; }
-    .ticket-card .receipt-media img{ max-height:175px; object-fit:contain; }
-    .ticket-card .receipt-media figcaption{ font-size:9.5px; margin-top:3px; }
-    .ticket-card .sig-name{ font-size:10.5px; margin-top:4px; padding-top:4px; }
-    .ticket-card .ticket-consent{ margin-top:11px; padding-top:10px; font-size:10px; line-height:1.4; }
-    .ticket-card .ticket-consent p{ margin:0 0 4px; }
-    .ticket-card .ticket-consent .consent-sub{ font-size:9.5px; }
+    .ticket-card .receipt-head{ margin-bottom:3px; }
+    .ticket-card .receipt-head .co{ font-size:10.5px; }
+    .ticket-card .receipt-head h2{ font-size:17px; margin-top:2px; }
+    .ticket-card .stub{ margin:4px 0 2px !important; }
+    .ticket-card .stub .eyebrow{ font-size:10px; }
+    .ticket-card .stub-number{ font-size:29px !important; margin:2px 0 1px !important; }
+    .ticket-card .stub .stub-date{ font-size:11px; }
+    .ticket-card .stub-divider{ margin:7px -20px !important; }
+    .ticket-card .receipt-row{ padding:3.5px 0; font-size:11.5px; }
+    .ticket-card .receipt-list{ font-size:10.5px; line-height:1.22; margin-top:2px; padding-left:15px; }
+    .ticket-card .receipt-list li{ margin-bottom:0; }
+    .ticket-card .ticket-terms{ margin-top:6px; padding-top:6px; font-size:7.3px; line-height:1.22; }
+    .ticket-card .ticket-terms .tt-title{ font-size:8px; margin-bottom:3px; }
+    .ticket-card .terms-list, .ticket-card .terms-sublist{ padding-left:13px; }
+    .ticket-card .terms-list > li{ margin-bottom:2px; }
+    .ticket-card .receipt-media{ margin-top:6px; gap:8px; }
+    .ticket-card .receipt-media img{ max-height:90px; object-fit:contain; }
+    .ticket-card .receipt-media figcaption{ font-size:7.5px; margin-top:2px; }
+    .ticket-card .sig-name{ font-size:8.5px; margin-top:2px; padding-top:2px; }
+    .ticket-card .ticket-consent{ margin-top:6px; padding-top:6px; font-size:8px; line-height:1.25; }
+    .ticket-card .ticket-consent p{ margin:0 0 2.5px; }
+    .ticket-card .ticket-consent .consent-sub{ font-size:7.5px; }
   }
 </style>
 
@@ -792,6 +796,15 @@
     globalErrorEl.textContent = msg; globalErrorEl.classList.add('show');
   }
 
+  // Dipakai setiap kali data isian bebas (nama, plat, dll — yang bisa saja
+  // kebetulan mengandung karakter seperti "<", ">" atau "&") ditaruh ke dalam
+  // innerHTML, supaya karakter itu ditampilkan apa adanya (bukan dianggap tag
+  // HTML sungguhan, yang bisa membuat sebagian teks hilang dari tampilan).
+  function escapeHtml(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   /* ---------- queue number (dihitung dari data hari ini di Google Sheet) ---------- */
   var antrianInput = document.getElementById('antrian');
   var stubDate = document.getElementById('stubDate');
@@ -1083,7 +1096,7 @@
     entries.forEach(function(s){
       var row = document.createElement('div');
       row.className = 'hist-row';
-      row.innerHTML = '<span><b>No. '+s.nomor+'</b> &nbsp;'+s.plat+' — '+s.nama+'</span><span>'+s.time+'</span>';
+      row.innerHTML = '<span><b>No. '+escapeHtml(s.nomor)+'</b> &nbsp;'+escapeHtml(s.plat)+' — '+escapeHtml(s.nama)+'</span><span>'+escapeHtml(s.time)+'</span>';
       histList.appendChild(row);
     });
   }
@@ -1669,7 +1682,7 @@
       if(res.method === 'share'){
         waShareStatus.textContent = 'Gambar tiket dibagikan. Nomor HP customer: ' + hpForCopy + ' — sudah dicoba disalin ke clipboard (tinggal tempel di pencarian WhatsApp), kalau ternyata tidak muncul saat ditempel, ketik manual saja nomor di atas.';
       } else if(res.method === 'fallback'){
-        waShareStatus.innerHTML = 'Tab baru sudah dibuka berisi gambar tiket ' + (currentTicketRecord.nama || 'customer') + ' — ikuti 2 langkah di tab itu: (1) tekan &amp; tahan gambarnya untuk menyimpan ke perangkat, lalu (2) tekan tombol hijau untuk lanjut ke chat WhatsApp dan lampirkan gambarnya lewat ikon 📎.<br>Kalau tab barunya tidak muncul/ke-block, pakai tombol "💬 Buka Chat WhatsApp" di atas.';
+        waShareStatus.innerHTML = 'Tab baru sudah dibuka berisi gambar tiket ' + escapeHtml(currentTicketRecord.nama || 'customer') + ' — ikuti 2 langkah di tab itu: (1) tekan &amp; tahan gambarnya untuk menyimpan ke perangkat, lalu (2) tekan tombol hijau untuk lanjut ke chat WhatsApp dan lampirkan gambarnya lewat ikon 📎.<br>Kalau tab barunya tidak muncul/ke-block, pakai tombol "💬 Buka Chat WhatsApp" di atas.';
       } else {
         waShareStatus.textContent = '';
       }
